@@ -9,70 +9,86 @@ import ctypes
 WIDTH = 800
 HEIGHT = 600
 
+
 # CLASSES___________________________________________________________________________
 class Pointer:
-        def __init__(self):
-            self.pointer = SDL_Rect(0, 0, 10, 10)
-            self.clicking = False
+    def __init__(self):
+        self.pointer = SDL_Rect(0, 0, 10, 10)
+        self.clicking = False
 
-        def Compute(self, event):
-            self.clicking = False
-            if(event.type == SDL_MOUSEBUTTONDOWN):
-                if(event.button.button == SDL_BUTTON_LEFT):
-                    self.clicking = True
+    def Compute(self, event):
+        self.clicking = False
+        if(event.type == SDL_MOUSEBUTTONDOWN):
+            if(event.button.button == SDL_BUTTON_LEFT):
+                self.clicking = True
 
-            if(event.type == SDL_MOUSEMOTION):
-                self.pointer.x = event.motion.x
-                self.pointer.y = event.motion.y
+        if(event.type == SDL_MOUSEMOTION):
+            self.pointer.x = event.motion.x
+            self.pointer.y = event.motion.y
 
-        def Is_Touching(self, item):
-            return SDL_HasIntersection(self.pointer, item.rect)
+    def Is_Touching(self, item):
+        return SDL_HasIntersection(self.pointer, item.rect)
 
-        def Is_Clicking(self, item):
-            return self.Is_Touching(item) and self.clicking
+    def Is_Clicking(self, item):
+        return self.Is_Touching(item) and self.clicking
 
- class TextObject:
-        fonts = dict()
 
-        def __init__(self, renderer, text, width, height,
-                    font_name,color = (0,0,0), location = (0, 0), font_size = 36):
-            self.r = renderer
-            if len(font_name) > 1:
-                TextObject.fonts[font_name[0]] = TTF_OpenFont(font_name[1], font_size)
-            self.color = SDL_Color(color[0], color[1], color[2])
-            self.surface = TTF_RenderText_Solid(TextObject.fonts[font_name[0]], text.encode('utf-8'), self.color)
-            self.message = SDL_CreateTextureFromSurface(self.r, self.surface)
-            SDL_FreeSurface(self.surface)
-            self.rect = SDL_Rect(location[0], location[1], width, height)
-            self.highlight = False
+class TextObject:
+    fonts = dict()
 
-        def Render(self, x = None, y = None):
-            if self.highlight:
-                SDL_SetRenderDrawColor(self.r, self.color.r, self.color.g, self.color.b, self.color.a)
-                SDL_RenderDrawRect(self.r, self.rect)
-            if x is None and y:
-                self.rect.y = y
-            elif x and y is None:
-                self.rect.x = x
-            elif x and y:
-                self.rect.x = x
-                self.rect.y = y
-            SDL_RenderCopy(self.r, self.message, None, self.rect)
+    def __init__(self, renderer, text, width, height,
+                font_name, color = (0, 0, 0), location = (0, 0), font_size = 36):
+        self.r = renderer
+        if len(font_name) > 1:
+            TextObject.fonts[font_name[0]] = TTF_OpenFont(font_name[1], font_size)
+        self.color = SDL_Color(color[0], color[1], color[2])
+        self.surface = TTF_RenderText_Solid(TextObject.fonts[font_name[0]], text.encode('utf-8'), self.color)
+        self.message = SDL_CreateTextureFromSurface(self.r, self.surface)
+        SDL_FreeSurface(self.surface)
+        self.rect = SDL_Rect(location[0], location[1], width, height)
+        self.highlight = False
 
-        def __del__(self):
-            for keys in list(TextObject.fonts):
-                font = TextObject.fonts.pop(keys, None)
-                if font: TTF_CloseFont(font)
-            SDL_DestroyTexture(self.message)
+    def Render(self, x = None, y = None):
+        if self.highlight:
+            SDL_SetRenderDrawColor(self.r, self.color.r, self.color.g, self.color.b, self.color.a)
+            SDL_RenderDrawRect(self.r, self.rect)
+        if x is None and y:
+            self.rect.y = y
+        elif x and y is None:
+            self.rect.x = x
+        elif x and y:
+            self.rect.x = x
+            self.rect.y = y
+        SDL_RenderCopy(self.r, self.message, None, self.rect)
+
+    def __del__(self):
+        for keys in list(TextObject.fonts):
+            font = TextObject.fonts.pop(keys, None)
+            if font: TTF_CloseFont(font)
+        SDL_DestroyTexture(self.message)
+
+
+class Camera:
+    def __init__(self, w, h):
+        self.x = 0
+        self.y = 0
+        cs = 40
+        self.rect = SDL_Rect(cs // 2, cs // 2, w-cs, h-cs)
+
+    def Show(self, renderer):
+        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255)
+        SDL_RenderDrawRect(renderer, self.rect)
+
 
 # FUNCTIONS_________________________________________________________________________
 def WindowState(window, renderer, fs):
-        if not fs:
-            SDL_SetWindowFullscreen(window, 0)
+    if not fs:
+        SDL_SetWindowFullscreen(window, 0)
 
-        elif fs:
-            SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP)
-            SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT)
+    elif fs:
+        SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP)
+        SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT)
+
 
 def Deleter(dictionary_list):
     for dictionary in dictionary_list:
@@ -91,7 +107,59 @@ def main():
 
     window = SDL_CreateWindow(b"Map Editor - By Sardonicals", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
-
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
+    event = SDL_Event()
+    running = True
+
+    # Boolean States____________________________________
+    menu = True
+    editing = False
+    paused = False
+
+    # Objects____________________________________________
+    mouse = Pointer()
+    camera = Camera(WIDTH, HEIGHT)
+    menu_items = {
+    "Title": TextObject(renderer, "Map Editor", 400, 190, ['arcade', 'font/arcade.ttf'], location = (200, 100)),
+        }
+
+    # Application Loop___________________________________
+    while(running):
+        # Event Loop______________________________
+        SDL_PollEvent(ctypes.byref(event))
+        mouse.Compute(event)
+        if (event.type == SDL_QUIT):
+            running = False
+            break
+
+        # Application Logic______________________________
+        if (menu):
+            for item in menu_items:
+                if item == "Title":
+                    pass
+                elif mouse.Is_Touching(menu_items[item]):
+                    menu_items[item].highlight = True
+                else:
+                    menu_items[item].highlight = False
+
+        # Rendering_______________________________________
+        SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
+        SDL_RenderClear(renderer)
+        if (menu):
+            for item in menu_items:
+                menu_items[item].Render()
+
+        if (editing):
+            camera.Show(renderer)
+
+        SDL_RenderPresent(renderer)
+
+        SDL_Delay(10)
+
+    Deleter([menu_items])
+    SDL_DestroyRenderer(renderer)
+    SDL_DestroyWindow(window)
+    SDL_Quit()
+
 
 main()
