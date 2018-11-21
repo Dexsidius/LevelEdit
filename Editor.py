@@ -12,15 +12,23 @@ HEIGHT = 600
 
 # CLASSES___________________________________________________________________________
 class Pointer:
+    cursors = dict()
+
     def __init__(self):
         self.pointer = SDL_Rect(0, 0, 10, 10)
         self.clicking = False
+        self.r_clicking = False
 
     def Compute(self, event):
         self.clicking = False
+        self.r_clicking = False
+
         if(event.type == SDL_MOUSEBUTTONDOWN):
             if(event.button.button == SDL_BUTTON_LEFT):
                 self.clicking = True
+
+            if(event.button.button == SDL_BUTTON_RIGHT):
+                self.r_clicking = True
 
         if(event.type == SDL_MOUSEMOTION):
             self.pointer.x = event.motion.x
@@ -31,6 +39,18 @@ class Pointer:
 
     def Is_Clicking(self, item):
         return self.Is_Touching(item) and self.clicking
+
+    def Is_R_Clicking(self, item):
+        return self.Is_Touching(item) and self.r_clicking
+
+    def Set_Cursor(self, id):
+        if id not in Pointer.cursors:
+            Pointer.cursors[id] = SDL_CreateSystemCursor(id)
+        SDL_SetCursor(Pointer.cursors[id])
+
+    def __del__(self):
+        for cursor in Pointer.cursors:
+            SDL_FreeCursor(Pointer.cursors[cursor])
 
 
 class TextObject:
@@ -69,15 +89,16 @@ class TextObject:
 
 
 class Camera:
-    def __init__(self, w, h):
+    def __init__(self, w, h, speed):
         self.x = 0
         self.y = 0
+        self.speed = speed
         cs = 40
-        self.rect = SDL_Rect(cs // 2, cs // 2, w-cs, h-cs)
+        self._rect = SDL_Rect(cs // 2, cs // 2, w-cs, h-cs)
 
     def Show(self, renderer):
         SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255)
-        SDL_RenderDrawRect(renderer, self.rect)
+        SDL_RenderDrawRect(renderer, self._rect)
 
 
 # FUNCTIONS_________________________________________________________________________
@@ -98,7 +119,6 @@ def Deleter(dictionary_list):
 
 # MAIN_______________________________________________________________________________
 def main():
-
     if (TTF_Init() < 0):
         print(TTF_GetError())
 
@@ -109,30 +129,37 @@ def main():
                               WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
     event = SDL_Event()
-    running = True
 
-    # Boolean States____________________________________
+    # Boolean States/Variables____________________________
+    running = True
     menu = True
     editing = False
     paused = False
 
     # Objects____________________________________________
     mouse = Pointer()
-    camera = Camera(WIDTH, HEIGHT)
+    camera = Camera(WIDTH, HEIGHT, 6)
     menu_items = {
-    "Title": TextObject(renderer, "Map Editor", 400, 190, ['arcade', 'font/arcade.ttf'], location = (200, 100)),
+    "Title":     TextObject(renderer, "Map Editor", 400, 190, ['arcade', 'font/arcade.ttf'], location = (200, 100)),
+    "New Map":   TextObject(renderer, "Create  Map", 200, 50, ['arcade'], location = (280, 320)),
+    "Load Map":  TextObject(renderer, "Load  Map", 160, 50, ['arcade'], location = (290, 380)),
+    "Quit":      TextObject(renderer, "Quit", 80, 50, ['arcade'], location = (330, 440)),
         }
 
     # Application Loop___________________________________
     while(running):
+        keystate = SDL_GetKeyboardState(None)
+
         # Event Loop______________________________
-        SDL_PollEvent(ctypes.byref(event))
-        mouse.Compute(event)
-        if (event.type == SDL_QUIT):
-            running = False
-            break
+        while(SDL_PollEvent(ctypes.byref(event))):
+            mouse.Compute(event)
+            if (event.type == SDL_QUIT):
+                running = False
+                break
 
         # Application Logic______________________________
+
+        # menu__________________________________________
         if (menu):
             for item in menu_items:
                 if item == "Title":
@@ -142,13 +169,36 @@ def main():
                 else:
                     menu_items[item].highlight = False
 
+            if mouse.Is_Clicking(menu_items['New Map']):
+                menu = False
+                editing = True
+                mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
+
+            if mouse.Is_Clicking(menu_items['Quit']):
+                running = False
+                break
+
+        # editing________________________________
+        if (editing):
+            if keystate[SDL_SCANCODE_UP]:
+                camera.y -= camera.speed
+            if keystate[SDL_SCANCODE_DOWN]:
+                camera.y += camera.speed
+            if keystate[SDL_SCANCODE_LEFT]:
+                camera.x -= camera.speed
+            if keystate[SDL_SCANCODE_RIGHT]:
+                camera.x += camera.speed
+
         # Rendering_______________________________________
         SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
         SDL_RenderClear(renderer)
+
+        # menu________________________________________
         if (menu):
             for item in menu_items:
                 menu_items[item].Render()
 
+        # editing______________________________________
         if (editing):
             camera.Show(renderer)
 
@@ -160,6 +210,7 @@ def main():
     SDL_DestroyRenderer(renderer)
     SDL_DestroyWindow(window)
     SDL_Quit()
+    TTF_Quit()
 
 
 main()
