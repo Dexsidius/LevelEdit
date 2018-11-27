@@ -17,7 +17,7 @@ class Pointer:
 
     def __init__(self):
         self.pointer = SDL_Rect(0, 0, 10, 10)
-        self.clicking = False
+        self.clicking = Falsea
         self.r_clicking = False
 
     def Compute(self, event):
