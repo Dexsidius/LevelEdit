@@ -181,13 +181,13 @@ def main():
         # editing________________________________
         if (editing):
             if keystate[SDL_SCANCODE_UP]:
-                camera.y -= camera.speed
-            if keystate[SDL_SCANCODE_DOWN]:
                 camera.y += camera.speed
+            if keystate[SDL_SCANCODE_DOWN]:
+                camera.y -= camera.speed
             if keystate[SDL_SCANCODE_LEFT]:
-                camera.x -= camera.speed
-            if keystate[SDL_SCANCODE_RIGHT]:
                 camera.x += camera.speed
+            if keystate[SDL_SCANCODE_RIGHT]:
+                camera.x -= camera.speed
 
         # Rendering_______________________________________
         SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
