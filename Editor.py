@@ -117,6 +117,14 @@ def Deleter(dictionary_list):
         for item in list(dictionary):
             del dictionary[item]
 
+def Get_Resources():
+    sep = '/'
+    resources = []
+    for path in  os.listdir('./resources/'):
+        c = path.split('.bmp')
+        resources.append(c[0])
+
+
 
 # MAIN_______________________________________________________________________________
 def main():
@@ -127,7 +135,7 @@ def main():
         print(SDL_GetError())
 
     window = SDL_CreateWindow(b"Map Editor - By Sardonicals", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                              WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
+                              WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE)
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
     event = SDL_Event()
 
@@ -136,6 +144,7 @@ def main():
     menu = True
     editing = False
     paused = False
+    sub_menu = False
     map_name = b'untitled.mx'
 
     # Objects____________________________________________
@@ -148,6 +157,10 @@ def main():
     "Quit":      TextObject(renderer, "Quit", 80, 50, ['arcade'], location = (330, 440)),
         }
 
+    editor_items = {
+    "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (330, 530))
+    }
+
     # Application Loop___________________________________
     while(running):
         keystate = SDL_GetKeyboardState(None)
@@ -158,6 +171,10 @@ def main():
             if (event.type == SDL_QUIT):
                 running = False
                 break
+
+            if (event.type == SDL_WINDOWEVENT):
+                if(event.window.event == SDL_WINDOWEVENT_RESIZED):
+                    SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT)
 
         # Application Logic______________________________
 
@@ -192,6 +209,15 @@ def main():
             if keystate[SDL_SCANCODE_RIGHT]:
                 camera.x -= camera.speed
 
+            if (mouse.Is_Clicking(editor_items['Resources'])):
+                if (sub_menu):
+                    sub_menu = False
+                else:
+                    sub_menu = True
+
+
+
+
         # Rendering_______________________________________
         SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
         SDL_RenderClear(renderer)
@@ -204,6 +230,8 @@ def main():
         # editing______________________________________
         if (editing):
             camera.Show(renderer)
+            for item in editor_items:
+                editor_items[item].Render()
 
         SDL_RenderPresent(renderer)
         SDL_Delay(10)
