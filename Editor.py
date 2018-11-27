@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*
 import os
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.abspath(__file__))
 from sdl2 import *
@@ -135,6 +136,7 @@ def main():
     menu = True
     editing = False
     paused = False
+    map_name = b'untitled.mx'
 
     # Objects____________________________________________
     mouse = Pointer()
@@ -180,6 +182,7 @@ def main():
 
         # editing________________________________
         if (editing):
+            SDL_SetWindowTitle(window, map_name + b' ― Map Editor')
             if keystate[SDL_SCANCODE_UP]:
                 camera.y += camera.speed
             if keystate[SDL_SCANCODE_DOWN]:
