@@ -206,7 +206,7 @@ def main():
             camera.Show(renderer)
 
         SDL_RenderPresent(renderer)
-
+nah
         SDL_Delay(10)
 
     Deleter([menu_items])
