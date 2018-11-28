@@ -120,9 +120,12 @@ def Deleter(dictionary_list):
 def Get_Resources():
     sep = '/'
     resources = []
-    for path in  os.listdir('./resources/'):
-        c = path.split('.bmp')
+    for path in os.listdir('./resources/'):
+        c = path.split(".bmp")
         resources.append(c[0])
+
+    return resources
+
 
 
 
@@ -145,7 +148,9 @@ def main():
     editing = False
     paused = False
     sub_menu = False
+    creating_item = False
     map_name = b'untitled.mx'
+    tiles = Get_Resources()
 
     # Objects____________________________________________
     mouse = Pointer()
@@ -158,7 +163,7 @@ def main():
         }
 
     editor_items = {
-    "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (330, 530))
+    "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (650, 530))
     }
 
     # Application Loop___________________________________
@@ -214,8 +219,17 @@ def main():
                     sub_menu = False
                 else:
                     sub_menu = True
+                    creating_items = True
 
-
+            if (sub_menu):
+                for item in editor_items:
+                    if (mouse.Is_Touching(editor_items[item])):
+                        editor_items[item].highlight = True
+                    else:
+                        editor_items[item].highlight = False
+                if (creating_items):
+                    for block in tiles:
+                        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location = (650, 200))
 
 
         # Rendering_______________________________________
@@ -232,6 +246,8 @@ def main():
             camera.Show(renderer)
             for item in editor_items:
                 editor_items[item].Render()
+
+
 
         SDL_RenderPresent(renderer)
         SDL_Delay(10)
