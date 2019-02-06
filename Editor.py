@@ -166,6 +166,9 @@ def main():
     "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (650, 530))
     }
 
+    for block in tiles:
+        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location = (650, 200))
+
     # Application Loop___________________________________
     while(running):
         keystate = SDL_GetKeyboardState(None)
@@ -219,7 +222,6 @@ def main():
                     sub_menu = False
                 else:
                     sub_menu = True
-                    creating_items = True
 
             if (sub_menu):
                 for item in editor_items:
@@ -227,9 +229,6 @@ def main():
                         editor_items[item].highlight = True
                     else:
                         editor_items[item].highlight = False
-                if (creating_items):
-                    for block in tiles:
-                        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location = (650, 200))
 
 
         # Rendering_______________________________________
