@@ -207,7 +207,7 @@ def main():
 
         # editing________________________________
         if (editing):
-            SDL_SetWindowTitle(window, map_name + b' ― Map Editor')
+            SDL_SetWindowTitle(window, map_name + b'  Map Editor')
             if keystate[SDL_SCANCODE_UP]:
                 camera.y += camera.speed
             if keystate[SDL_SCANCODE_DOWN]:
