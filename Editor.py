@@ -16,6 +16,8 @@ class Pointer:
     cursors = dict()
 
     def __init__(self):
+        self.x = 0
+        self.y = 0
         self.pointer = SDL_Rect(0, 0, 10, 10)
         self.clicking = False
         self.r_clicking = False
@@ -24,16 +26,19 @@ class Pointer:
         self.clicking = False
         self.r_clicking = False
 
-        if(event.type == SDL_MOUSEBUTTONDOWN):
+        if (event.type == SDL_MOUSEBUTTONDOWN):
             if(event.button.button == SDL_BUTTON_LEFT):
                 self.clicking = True
 
             if(event.button.button == SDL_BUTTON_RIGHT):
                 self.r_clicking = True
 
-        if(event.type == SDL_MOUSEMOTION):
+        if (event.type == SDL_MOUSEMOTION):
             self.pointer.x = event.motion.x
             self.pointer.y = event.motion.y
+
+        self.x = self.pointer.x
+        self.y = self.pointer.y
 
     def Is_Touching(self, item):
         return SDL_HasIntersection(self.pointer, item.rect)
@@ -87,6 +92,45 @@ class TextObject:
             font = TextObject.fonts.pop(keys, None)
             if font: TTF_CloseFont(font)
         SDL_DestroyTexture(self.message)
+
+
+class TextureCache:
+    def __init__(self, renderer):
+        self.renderer
+        self._cache = dict()
+        
+    def LoadTexture(self, filepath):
+        if filepath not in self._cache:
+            surface = SDL_LoadBMP(filepath.encodde('utf-8'))
+            self._cache[filepath] = SDL_LoadTextureFromSurface(self.renderer, self.renderer)
+            SDL_FreeSurface(surface)
+            SDL_SetTextureBlendMode(self._cache[filepath], SDL_BLENDMODE_BLEND)
+        return self._cache[filepath]
+    
+    def __del__(self):
+        for file in list(self._cache):
+            SDL_DestroyTexture(self._cache[file])
+    
+
+class GameTile:
+    def __init__(self, cache, filepath, x, y, w, h):
+        self.c = cache
+        self.name = filepath.split('.bmp')[0]
+        self.texture = self.c.LoadTexture(filepath)
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.d_rect = SDL_Rect(self.x, self.y, self.w, self.h)
+    
+    def Render(self, camera_pos = (0,0), alpha = 255):
+        self.d_rect.x = self.x + camera_pos[0]
+        self.d_rect.y = self.y + camera_pos[1]
+        SDL_SetTextureAlphaMod(self.texture, alpha)
+        SDL_RenderCopy(cache.renderer, self.texture, None, self.d_rect)
+    
+    def GetPos(self):
+        return str(self.x) + ',' + str(self.y)
 
 
 class Camera:
@@ -144,13 +188,14 @@ def main():
 
     # Boolean States/Variables____________________________
     running = True
-    menu = True
-    editing = False
+    game_state = "MENU"
     paused = False
     sub_menu = False
     creating_item = False
     map_name = b'untitled.mx'
     tiles = Get_Resources()
+    current_item = None
+    placement = True
 
     # Objects____________________________________________
     mouse = Pointer()
@@ -165,16 +210,21 @@ def main():
     editor_items = {
     "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (650, 530))
     }
-
+    cache = TextureCache(renderer)
+    block_cache = dict()
+    
+    
+    l =  [650, 200]
     for block in tiles:
-        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location = (650, 200))
+        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location = l)
+        l[1] += 50
 
     # Application Loop___________________________________
-    while(running):
+    while (running):
         keystate = SDL_GetKeyboardState(None)
 
         # Event Loop______________________________
-        while(SDL_PollEvent(ctypes.byref(event))):
+        while (SDL_PollEvent(ctypes.byref(event))):
             mouse.Compute(event)
             if (event.type == SDL_QUIT):
                 running = False
@@ -187,7 +237,7 @@ def main():
         # Application Logic______________________________
 
         # menu__________________________________________
-        if (menu):
+        if (game_state == 'MENU'):
             for item in menu_items:
                 if item == "Title":
                     pass
@@ -197,16 +247,15 @@ def main():
                     menu_items[item].highlight = False
 
             if mouse.Is_Clicking(menu_items['New Map']):
-                menu = False
-                editing = True
+                game_state = 'EDITING'
                 mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
 
             if mouse.Is_Clicking(menu_items['Quit']):
                 running = False
                 break
 
-        # editing________________________________
-        if (editing):
+        # EDITING________________________________
+        if (game_state == 'EDITING'):
             SDL_SetWindowTitle(window, map_name + b'  Map Editor')
             if keystate[SDL_SCANCODE_UP]:
                 camera.y += camera.speed
@@ -223,28 +272,52 @@ def main():
                 else:
                     sub_menu = True
 
+            if (placement):
+                if (mouse.clicking):
+                    for item in editor_items:
+                        if not mouse.Is_Touching(editor_items[item]):
+                            if (current_item in block_cache):
+                                block_cache[current_item].append((mouse.x + camera.x, mouse.y + camera.y))
+                            else:
+                                block_cache[current_item] = [(mouse.x + camera.x, mouse.y + camera.x)]
+
             if (sub_menu):
                 for item in editor_items:
                     if (mouse.Is_Touching(editor_items[item])):
+                        placement = False
                         editor_items[item].highlight = True
                     else:
+                        placement = True
                         editor_items[item].highlight = False
+                            
+                    
+            
 
 
-        # Rendering_______________________________________
+        # RENDERING_______________________________________
         SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
         SDL_RenderClear(renderer)
 
         # menu________________________________________
-        if (menu):
+        if (game_state == 'MENU'):
             for item in menu_items:
                 menu_items[item].Render()
 
         # editing______________________________________
-        if (editing):
+        if (game_state == 'EDITING'):
             camera.Show(renderer)
-            for item in editor_items:
-                editor_items[item].Render()
+            if current_item:
+                current_item.Render()
+            
+            editor_items['Resources'].Render()
+
+            if (sub_menu):
+                for item in editor_items:
+                    if item == "Resources":
+                        pass
+                    else:
+                        editor_items[item].Render()
+
 
 
 
