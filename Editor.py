@@ -62,8 +62,7 @@ class Pointer:
 class TextObject:
     fonts = dict()
 
-    def __init__(self, renderer, text, width, height,
-                font_name, color = (0, 0, 0), location = (0, 0), font_size = 36):
+    def __init__(self, renderer, text, width, height, font_name, color = (0, 0, 0), location = (0, 0), font_size = 36):
         self.r = renderer
         if len(font_name) > 1:
             TextObject.fonts[font_name[0]] = TTF_OpenFont(font_name[1], font_size)
@@ -95,13 +94,13 @@ class TextObject:
 
 
 class TextureCache:
-    def __init__(self, renderer):
+    def __init__(self, renderer, cache):
         self.renderer
         self._cache = dict()
         
     def LoadTexture(self, filepath):
         if filepath not in self._cache:
-            surface = SDL_LoadBMP(filepath.encodde('utf-8'))
+            surface = SDL_LoadBMP(filepath.encode('utf-8'))
             self._cache[filepath] = SDL_LoadTextureFromSurface(self.renderer, self.renderer)
             SDL_FreeSurface(surface)
             SDL_SetTextureBlendMode(self._cache[filepath], SDL_BLENDMODE_BLEND)
@@ -131,6 +130,9 @@ class GameTile:
     
     def GetPos(self):
         return str(self.x) + ',' + str(self.y)
+    
+    def Collide(self): #Either making a function to handle solid and soft tiles or make an entirely different class just for GameObjects
+        pass
 
 
 class Camera:
@@ -194,7 +196,7 @@ def main():
     creating_item = False
     map_name = b'untitled.mx'
     tiles = Get_Resources()
-    current_item = None
+    current_item = 'Black block'
     placement = True
 
     # Objects____________________________________________
@@ -210,7 +212,7 @@ def main():
     editor_items = {
     "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (650, 530))
     }
-    cache = TextureCache(renderer)
+    #cache = TextureCache(renderer)
     block_cache = dict()
     
     
@@ -273,13 +275,16 @@ def main():
                     sub_menu = True
 
             if (placement):
-                if (mouse.clicking):
-                    for item in editor_items:
-                        if not mouse.Is_Touching(editor_items[item]):
+                for item in editor_items:
+                    if (mouse.clicking):
+                        if item == 'Resources':
+                            pass
+                        elif not mouse.Is_Touching(editor_items[item]):
                             if (current_item in block_cache):
-                                block_cache[current_item].append((mouse.x + camera.x, mouse.y + camera.y))
+                                block_cache[current_item].append((GameTile(cache, 'resources/Black block.bmp', mouse.x + camera.x, mouse.y + camera.y, 25, 25)))
                             else:
-                                block_cache[current_item] = [(mouse.x + camera.x, mouse.y + camera.x)]
+                                block_cache[current_item] = [GameTile(cache, 'resources/Black block.bmp', mouse.x + camera.x, mouse.y + camera.y, 25, 25)]
+                            
 
             if (sub_menu):
                 for item in editor_items:
@@ -317,6 +322,12 @@ def main():
                         pass
                     else:
                         editor_items[item].Render()
+            
+            if len(block_cache) > 0:
+                if placement:
+                    for tile in block_cache:
+                        tile.Render()
+
 
 
 
