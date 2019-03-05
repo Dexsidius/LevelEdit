@@ -94,14 +94,14 @@ class TextObject:
 
 
 class TextureCache:
-    def __init__(self, renderer, cache):
-        self.renderer
+    def __init__(self, renderer):
+        self.renderer = renderer
         self._cache = dict()
         
     def LoadTexture(self, filepath):
         if filepath not in self._cache:
             surface = SDL_LoadBMP(filepath.encode('utf-8'))
-            self._cache[filepath] = SDL_LoadTextureFromSurface(self.renderer, self.renderer)
+            self._cache[filepath] = SDL_CreateTextureFromSurface(self.renderer, surface)
             SDL_FreeSurface(surface)
             SDL_SetTextureBlendMode(self._cache[filepath], SDL_BLENDMODE_BLEND)
         return self._cache[filepath]
@@ -126,7 +126,7 @@ class GameTile:
         self.d_rect.x = self.x + camera_pos[0]
         self.d_rect.y = self.y + camera_pos[1]
         SDL_SetTextureAlphaMod(self.texture, alpha)
-        SDL_RenderCopy(cache.renderer, self.texture, None, self.d_rect)
+        SDL_RenderCopy(self.c.renderer, self.texture, None, self.d_rect)
     
     def GetPos(self):
         return str(self.x) + ',' + str(self.y)
@@ -196,7 +196,7 @@ def main():
     creating_item = False
     map_name = b'untitled.mx'
     tiles = Get_Resources()
-    current_item = 'Black block'
+    current_item = None
     placement = True
 
     # Objects____________________________________________
@@ -212,9 +212,13 @@ def main():
     editor_items = {
     "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (650, 530))
     }
-    #cache = TextureCache(renderer)
+
+    cache = TextureCache(renderer)
     block_cache = dict()
     
+    game_blocks = {
+        "Blocks": [TextureCache(renderer).LoadTexture('/resources/Black block.bmp')]
+    }
     
     l =  [650, 200]
     for block in tiles:
@@ -250,10 +254,12 @@ def main():
 
             if mouse.Is_Clicking(menu_items['New Map']):
                 game_state = 'EDITING'
+                mouse.clicking = False
                 mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
 
             if mouse.Is_Clicking(menu_items['Quit']):
                 running = False
+                mouse.clicking = False
                 break
 
         # EDITING________________________________
@@ -274,16 +280,6 @@ def main():
                 else:
                     sub_menu = True
 
-            if (placement):
-                for item in editor_items:
-                    if (mouse.clicking):
-                        if item == 'Resources':
-                            pass
-                        elif not mouse.Is_Touching(editor_items[item]):
-                            if (current_item in block_cache):
-                                block_cache[current_item].append((GameTile(cache, 'resources/Black block.bmp', mouse.x + camera.x, mouse.y + camera.y, 25, 25)))
-                            else:
-                                block_cache[current_item] = [GameTile(cache, 'resources/Black block.bmp', mouse.x + camera.x, mouse.y + camera.y, 25, 25)]
                             
 
             if (sub_menu):
@@ -311,8 +307,6 @@ def main():
         # editing______________________________________
         if (game_state == 'EDITING'):
             camera.Show(renderer)
-            if current_item:
-                current_item.Render()
             
             editor_items['Resources'].Render()
 
@@ -324,9 +318,9 @@ def main():
                         editor_items[item].Render()
             
             if len(block_cache) > 0:
-                if placement:
-                    for tile in block_cache:
-                        tile.Render()
+                for tile in block_cache:
+                    for i in tile:
+                        tile[i].Render()
 
 
 
