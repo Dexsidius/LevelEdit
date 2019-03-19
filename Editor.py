@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*
 import os
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.abspath(__file__))
@@ -16,6 +17,8 @@ class Pointer:
     cursors = dict()
 
     def __init__(self):
+        self.x = 0
+        self.y = 0
         self.pointer = SDL_Rect(0, 0, 10, 10)
         self.clicking = False
         self.r_clicking = False
@@ -24,16 +27,19 @@ class Pointer:
         self.clicking = False
         self.r_clicking = False
 
-        if(event.type == SDL_MOUSEBUTTONDOWN):
-            if(event.button.button == SDL_BUTTON_LEFT):
+        if (event.type == SDL_MOUSEBUTTONDOWN):
+            if (event.button.button == SDL_BUTTON_LEFT):
                 self.clicking = True
 
-            if(event.button.button == SDL_BUTTON_RIGHT):
+            if (event.button.button == SDL_BUTTON_RIGHT):
                 self.r_clicking = True
 
-        if(event.type == SDL_MOUSEMOTION):
+        if (event.type == SDL_MOUSEMOTION):
             self.pointer.x = event.motion.x
             self.pointer.y = event.motion.y
+
+        self.x = self.pointer.x
+        self.y = self.pointer.y
 
     def Is_Touching(self, item):
         return SDL_HasIntersection(self.pointer, item.rect)
@@ -57,8 +63,7 @@ class Pointer:
 class TextObject:
     fonts = dict()
 
-    def __init__(self, renderer, text, width, height,
-                font_name, color = (0, 0, 0), location = (0, 0), font_size = 36):
+    def __init__(self, renderer, text, width, height, font_name, color=(0, 0, 0), location=(0, 0), font_size=36):
         self.r = renderer
         if len(font_name) > 1:
             TextObject.fonts[font_name[0]] = TTF_OpenFont(font_name[1], font_size)
@@ -69,7 +74,7 @@ class TextObject:
         self.rect = SDL_Rect(location[0], location[1], width, height)
         self.highlight = False
 
-    def Render(self, x = None, y = None):
+    def Render(self, x=None, y=None):
         if self.highlight:
             SDL_SetRenderDrawColor(self.r, self.color.r, self.color.g, self.color.b, self.color.a)
             SDL_RenderDrawRect(self.r, self.rect)
@@ -89,13 +94,90 @@ class TextObject:
         SDL_DestroyTexture(self.message)
 
 
+class DynamicTextObject: #This class allows for constantly updating text to be rendered efficiently on screen
+    def __init__(self, renderer, font, size, colors = [(0,0,0)]):
+        self.r = renderer
+        self.font = TTF_OpenFont(font.encode('utf-8'), size)
+        self.colors = dict()
+
+        l_n_n = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p'
+                 ,'q','r','s','t','u','v','w','x','y','z',' ',"'", ":", "(",")", '-','.','_'
+                 ,'A', 'B','C','D','E', 'F', 'G', 'H', 'I','J', 'K','L','M','N','O'
+                 ,'P', 'Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5'
+                 ,'6','7','8','9','0']
+
+        for color in colors:
+            self.colors[color] = dict()
+            for char in l_n_n:
+                if char not in self.colors[color]:
+                    surface = TTF_RenderText_Solid(self.font, char.encode('utf-8'), SDL_Color(color[0], color[1], color[2], 255))
+                    self.colors[color][char] = SDL_CreateTextureFromSurface(self.r, surface)
+                    SDL_FreeSurface(surface)
+
+    def RenderText(self, text, location, color = (0,0,0), offset = 0):
+        x = 0
+        for char in text:
+            d_rect = SDL_Rect(location[0] + x, location[1], location[2], location[3])
+            SDL_RenderCopy(self.r, self.colors[color][char], None, d_rect)
+            x += location[2] + offset
+
+    def __del__(self):
+        for color in list(self.colors):
+            for char in list(self.colors[color]):
+                SDL_DestroyTexture(self.colors[color][char])
+        TTF_CloseFont(self.font)
+
+
+class TextureCache:
+    def __init__(self, renderer):
+        self.renderer = renderer
+        self._cache = dict()
+
+    def LoadTexture(self, filepath):
+        if filepath not in self._cache:
+            surface = SDL_LoadBMP(filepath.encode('utf-8'))
+            self._cache[filepath] = SDL_CreateTextureFromSurface(self.renderer, surface)
+            SDL_FreeSurface(surface)
+            SDL_SetTextureBlendMode(self._cache[filepath], SDL_BLENDMODE_BLEND)
+        return self._cache[filepath]
+
+    def __del__(self):
+        for file in list(self._cache):
+            SDL_DestroyTexture(self._cache[file])
+
+
+class GameTile:
+    def __init__(self, cache, filepath, x, y, w, h):
+        self.c = cache
+        self.name = filepath.split('.bmp')[0]
+        self.texture = self.c.LoadTexture(filepath)
+        self.x = x
+        self.y = y
+        self.w = w
+        self.h = h
+        self.d_rect = SDL_Rect(self.x, self.y, self.w, self.h)
+
+    def Render(self, camera_pos=(0, 0), alpha=255):
+        self.d_rect.x = self.x + camera_pos[0]
+        self.d_rect.y = self.y + camera_pos[1]
+        SDL_SetTextureAlphaMod(self.texture, alpha)
+        SDL_RenderCopy(self.c.renderer, self.texture, None, self.d_rect)
+
+    def GetPos(self):
+        return str(self.x) + ',' + str(self.y)
+
+    def Collide(
+            self):  # Either making a function to handle solid and soft tiles or make an entirely different class just for GameObjects
+        pass
+
+
 class Camera:
     def __init__(self, w, h, speed):
         self.x = 0
         self.y = 0
         self.speed = speed
         cs = 40
-        self._rect = SDL_Rect(cs // 2, cs // 2, w-cs, h-cs)
+        self._rect = SDL_Rect(cs // 2, cs // 2, w - cs, h - cs)
 
     def Show(self, renderer):
         SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255)
@@ -118,6 +200,16 @@ def Deleter(dictionary_list):
             del dictionary[item]
 
 
+def Get_Resources():
+    sep = '/'
+    resources = []
+    for path in os.listdir('./resources/'):
+        c = path.split(".bmp")
+        resources.append(c[0])
+
+    return resources
+
+
 # MAIN_______________________________________________________________________________
 def main():
     if (TTF_Init() < 0):
@@ -127,42 +219,66 @@ def main():
         print(SDL_GetError())
 
     window = SDL_CreateWindow(b"Map Editor - By Sardonicals", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
-                              WIDTH, HEIGHT, SDL_WINDOW_SHOWN)
+                              WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE)
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
     event = SDL_Event()
 
     # Boolean States/Variables____________________________
     running = True
-    menu = True
-    editing = False
+    game_state = "MENU"
     paused = False
+    sub_menu = False
+    creating_item = False
     map_name = b'untitled.mx'
+    tiles = Get_Resources()
+    current_item = None
+    placement = True
 
     # Objects____________________________________________
     mouse = Pointer()
     camera = Camera(WIDTH, HEIGHT, 6)
     menu_items = {
-    "Title":     TextObject(renderer, "Map Editor", 400, 190, ['arcade', 'font/arcade.ttf'], location = (200, 100)),
-    "New Map":   TextObject(renderer, "Create  Map", 200, 50, ['arcade'], location = (280, 320)),
-    "Load Map":  TextObject(renderer, "Load  Map", 160, 50, ['arcade'], location = (290, 380)),
-    "Quit":      TextObject(renderer, "Quit", 80, 50, ['arcade'], location = (330, 440)),
-        }
+        "Title": TextObject(renderer, "Map Editor", 400, 190, ['arcade', b'font/arcade.ttf'], location=(200, 100)),
+        "New Map": TextObject(renderer, "Create  Map", 200, 50, ['arcade'], location=(280, 320)),
+        "Load Map": TextObject(renderer, "Load  Map", 160, 50, ['arcade'], location=(290, 380)),
+        "Quit": TextObject(renderer, "Quit", 80, 50, ['arcade'], location=(330, 440)),
+    }
+
+    editor_items = {
+        "Resources": TextObject(renderer, "Items", 80, 50, ['arcade'], location=(650, 530))
+    }
+
+    cache = TextureCache(renderer)
+    block_cache = dict()
+
+    game_blocks = {
+        "Blocks": [TextureCache(renderer).LoadTexture('/resources/Black block.bmp')]
+    }
+
+    l = [650, 200]
+    for block in tiles:
+        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location=l)
+        l[1] += 50
 
     # Application Loop___________________________________
-    while(running):
+    while (running):
         keystate = SDL_GetKeyboardState(None)
 
         # Event Loop______________________________
-        while(SDL_PollEvent(ctypes.byref(event))):
+        while (SDL_PollEvent(ctypes.byref(event))):
             mouse.Compute(event)
             if (event.type == SDL_QUIT):
                 running = False
                 break
 
+            if (event.type == SDL_WINDOWEVENT):
+                if (event.window.event == SDL_WINDOWEVENT_RESIZED):
+                    SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT)
+
         # Application Logic______________________________
 
         # menu__________________________________________
-        if (menu):
+        if (game_state == 'MENU'):
             for item in menu_items:
                 if item == "Title":
                     pass
@@ -172,17 +288,18 @@ def main():
                     menu_items[item].highlight = False
 
             if mouse.Is_Clicking(menu_items['New Map']):
-                menu = False
-                editing = True
+                game_state = 'EDITING'
+                mouse.clicking = False
                 mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
 
             if mouse.Is_Clicking(menu_items['Quit']):
                 running = False
+                mouse.clicking = False
                 break
 
-        # editing________________________________
-        if (editing):
-            SDL_SetWindowTitle(window, map_name + b' ― Map Editor')
+        # EDITING________________________________
+        if (game_state == 'EDITING'):
+            SDL_SetWindowTitle(window, map_name + b'  Map Editor')
             if keystate[SDL_SCANCODE_UP]:
                 camera.y += camera.speed
             if keystate[SDL_SCANCODE_DOWN]:
@@ -192,18 +309,47 @@ def main():
             if keystate[SDL_SCANCODE_RIGHT]:
                 camera.x -= camera.speed
 
-        # Rendering_______________________________________
+            if (mouse.Is_Clicking(editor_items['Resources'])):
+                if (sub_menu):
+                    sub_menu = False
+                else:
+                    sub_menu = True
+
+            if (sub_menu):
+                for item in editor_items:
+                    if (mouse.Is_Touching(editor_items[item])):
+                        placement = False
+                        editor_items[item].highlight = True
+                    else:
+                        placement = True
+                        editor_items[item].highlight = False
+
+        # RENDERING_______________________________________
         SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
         SDL_RenderClear(renderer)
 
         # menu________________________________________
-        if (menu):
+        if (game_state == 'MENU'):
             for item in menu_items:
                 menu_items[item].Render()
 
         # editing______________________________________
-        if (editing):
+        if (game_state == 'EDITING'):
             camera.Show(renderer)
+
+            editor_items['Resources'].Render()
+
+            if (sub_menu):
+                for item in editor_items:
+                    if item == "Resources":
+                        pass
+                    else:
+                        editor_items[item].Render()
+
+            if len(block_cache) > 0:
+                for tile in block_cache:
+                    for i in tile:
+                        tile[i].Render()
 
         SDL_RenderPresent(renderer)
         SDL_Delay(10)
