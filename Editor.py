@@ -62,7 +62,6 @@ class Pointer:
 
 class TextObject:
     fonts = dict()
-
     def __init__(self, renderer, text, width, height, font_name, color = (0, 0, 0), location = (0, 0), font_size = 36):
         self.r = renderer
         if len(font_name) > 1:
@@ -208,18 +207,6 @@ def Get_Resources():
     return resources
 
 
-
-
-def Get_Resources():
-    sep = '/'
-    resources = []
-    for path in os.listdir('./resources/'):
-        c = path.split(".bmp")
-        resources.append(c[0])
-
-    return resources
-
-
 # MAIN_______________________________________________________________________________
 def main():
     if (TTF_Init() < 0):
@@ -260,7 +247,6 @@ def main():
 
     cache = TextureCache(renderer)
     block_cache = dict()
-
     game_blocks = {
         "Blocks": [TextureCache(renderer).LoadTexture('/resources/Black block.bmp')]
     }
@@ -268,22 +254,6 @@ def main():
     l = [650, 200]
     for block in tiles:
         editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location=l)
-        l[1] += 50
-
-    editor_items = {
-    "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (650, 530))
-    }
-
-    cache = TextureCache(renderer)
-    block_cache = dict()
-
-    game_blocks = {
-        "Blocks": [TextureCache(renderer).LoadTexture('/resources/Black block.bmp')]
-    }
-
-    l =  [650, 200]
-    for block in tiles:
-        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location = l)
         l[1] += 50
 
     # Application Loop___________________________________
@@ -377,23 +347,6 @@ def main():
                     for i in tile:
                         tile[i].Render()
 
-
-
-
-
-            editor_items['Resources'].Render()
-
-            if (sub_menu):
-                for item in editor_items:
-                    if item == "Resources":
-                        pass
-                    else:
-                        editor_items[item].Render()
-
-            if len(block_cache) > 0:
-                for tile in block_cache:
-                    for i in tile:
-                        tile[i].Render()
 
         SDL_RenderPresent(renderer)
         SDL_Delay(10)
