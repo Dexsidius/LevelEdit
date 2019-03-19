@@ -63,7 +63,7 @@ class Pointer:
 class TextObject:
     fonts = dict()
 
-    def __init__(self, renderer, text, width, height, font_name, color=(0, 0, 0), location=(0, 0), font_size=36):
+    def __init__(self, renderer, text, width, height, font_name, color = (0, 0, 0), location = (0, 0), font_size = 36):
         self.r = renderer
         if len(font_name) > 1:
             TextObject.fonts[font_name[0]] = TTF_OpenFont(font_name[1], font_size)
@@ -157,7 +157,7 @@ class GameTile:
         self.h = h
         self.d_rect = SDL_Rect(self.x, self.y, self.w, self.h)
 
-    def Render(self, camera_pos=(0, 0), alpha=255):
+    def Render(self, camera_pos = (0,0), alpha = 255):
         self.d_rect.x = self.x + camera_pos[0]
         self.d_rect.y = self.y + camera_pos[1]
         SDL_SetTextureAlphaMod(self.texture, alpha)
@@ -166,8 +166,7 @@ class GameTile:
     def GetPos(self):
         return str(self.x) + ',' + str(self.y)
 
-    def Collide(
-            self):  # Either making a function to handle solid and soft tiles or make an entirely different class just for GameObjects
+    def Collide(self): #Either making a function to handle solid and soft tiles or make an entirely different class just for GameObjects
         pass
 
 
@@ -198,6 +197,17 @@ def Deleter(dictionary_list):
     for dictionary in dictionary_list:
         for item in list(dictionary):
             del dictionary[item]
+
+def Get_Resources():
+    sep = '/'
+    resources = []
+    for path in os.listdir('./resources/'):
+        c = path.split(".bmp")
+        resources.append(c[0])
+
+    return resources
+
+
 
 
 def Get_Resources():
@@ -258,6 +268,22 @@ def main():
     l = [650, 200]
     for block in tiles:
         editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location=l)
+        l[1] += 50
+
+    editor_items = {
+    "Resources": TextObject(renderer, "Items", 80, 50 ,['arcade'], location = (650, 530))
+    }
+
+    cache = TextureCache(renderer)
+    block_cache = dict()
+
+    game_blocks = {
+        "Blocks": [TextureCache(renderer).LoadTexture('/resources/Black block.bmp')]
+    }
+
+    l =  [650, 200]
+    for block in tiles:
+        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location = l)
         l[1] += 50
 
     # Application Loop___________________________________
@@ -336,6 +362,24 @@ def main():
         # editing______________________________________
         if (game_state == 'EDITING'):
             camera.Show(renderer)
+
+            editor_items['Resources'].Render()
+
+            if (sub_menu):
+                for item in editor_items:
+                    if item == "Resources":
+                        pass
+                    else:
+                        editor_items[item].Render()
+
+            if len(block_cache) > 0:
+                for tile in block_cache:
+                    for i in tile:
+                        tile[i].Render()
+
+
+
+
 
             editor_items['Resources'].Render()
 
