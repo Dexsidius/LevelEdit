@@ -365,7 +365,7 @@ def main():
                         editor_items[item].Render()
 
             if(current_item):
-                GameTile(cache, tile_fp[current_item], camera.x + mouse.x, camera.y + mouse.y, 20, 20).Render()
+                GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, 20, 20).Render()
 
 
         SDL_RenderPresent(renderer)
