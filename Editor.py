@@ -33,6 +33,13 @@ class Pointer:
 
             if (event.button.button == SDL_BUTTON_RIGHT):
                 self.r_clicking = True
+        
+        if (event.type == SDL_MOUSEBUTTONUP):
+            if (event.button.button == SDL_BUTTON_LEFT):
+                self.clicking = False
+            
+            if (event.button.button == SDL_BUTTON_RIGHT):
+                self.r_clicking = False
 
         if (event.type == SDL_MOUSEMOTION):
             self.pointer.x = event.motion.x
@@ -156,7 +163,7 @@ class GameTile:
         self.h = h
         self.d_rect = SDL_Rect(self.x, self.y, self.w, self.h)
 
-    def Render(self, camera_pos = (0,0), alpha = 255):
+    def Render(self, camera_pos = (0,0), alpha = 100):
         self.d_rect.x = self.x + camera_pos[0]
         self.d_rect.y = self.y + camera_pos[1]
         SDL_SetTextureAlphaMod(self.texture, alpha)
@@ -206,6 +213,17 @@ def Get_Resources():
 
     return resources
 
+def Get_Paths():
+    path = './resources/'
+    paths = dict()
+
+    for l in os.listdir(path):
+        c = l.split(".bmp")
+        paths[c[0]] = path + l
+    
+    return paths
+
+
 
 # MAIN_______________________________________________________________________________
 def main():
@@ -228,6 +246,7 @@ def main():
     creating_item = False
     map_name = b'untitled.mx'
     tiles = Get_Resources()
+    tile_fp = Get_Paths()
     current_item = None
     placement = True
 
@@ -247,9 +266,6 @@ def main():
 
     cache = TextureCache(renderer)
     block_cache = dict()
-    game_blocks = {
-        "Blocks": [TextureCache(renderer).LoadTexture('/resources/Black block.bmp')]
-    }
 
     l = [650, 200]
     for block in tiles:
@@ -285,12 +301,10 @@ def main():
 
             if mouse.Is_Clicking(menu_items['New Map']):
                 game_state = 'EDITING'
-                mouse.clicking = False
                 mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
 
             if mouse.Is_Clicking(menu_items['Quit']):
                 running = False
-                mouse.clicking = False
                 break
 
         # EDITING________________________________
@@ -319,6 +333,14 @@ def main():
                     else:
                         placement = True
                         editor_items[item].highlight = False
+            
+            for i in editor_items:
+                if (i == 'Resources'):
+                    pass
+                elif (mouse.Is_Clicking(editor_items[i])):
+                    current_item = i
+                    block_cache[current_item] = tile_fp[current_item]
+
 
         # RENDERING_______________________________________
         SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
@@ -342,10 +364,8 @@ def main():
                     else:
                         editor_items[item].Render()
 
-            if len(block_cache) > 0:
-                for tile in block_cache:
-                    for i in tile:
-                        tile[i].Render()
+            if(current_item):
+                GameTile(cache, tile_fp[current_item], camera.x + mouse.x, camera.y + mouse.y, 20, 20).Render()
 
 
         SDL_RenderPresent(renderer)
