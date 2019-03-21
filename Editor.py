@@ -351,23 +351,15 @@ def main():
                 
             if (current_item) and (mouse.clicking) and (placement): #Properly places game tile onto surface. *Beware of 'multiple clicking' issue.*
                 if current_item not in block_cache:
-                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, tile_size[0], tile_size[1])]
+                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
+                                                          mouse.y + (-1 * camera.y), tile_size[0], tile_size[1])]
                 else:
-                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, tile_size[0], tile_size[1]))
-            
-            for block in block_cache:       #Ensures that placed blocks move along with camera
-                for x in block_cache[block]:
-                    if keystate[SDL_SCANCODE_UP]:
-                        x.y += camera.speed
-                    if keystate[SDL_SCANCODE_DOWN]:
-                        x.y -= camera.speed
-                    if keystate[SDL_SCANCODE_LEFT]:
-                        x.x += camera.speed
-                    if keystate[SDL_SCANCODE_RIGHT]:
-                        x.x -= camera.speed
+                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
+                                                              mouse.y + (-1 * camera.y), tile_size[0], tile_size[1]))
 
             if (ghost_tile):
                 ghost_tile.SetPos(mouse.x, mouse.y)
+
 
         # RENDERING_______________________________________
         SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
@@ -397,7 +389,7 @@ def main():
             if len(block_cache) > 0:        #Renders block placement if block_cache is not empty
                 for block in block_cache:
                     for x in block_cache[block]:
-                        x.Render()
+                        x.Render((camera.x, camera.y))
 
         SDL_RenderPresent(renderer)
         SDL_Delay(10)
