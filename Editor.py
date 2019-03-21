@@ -353,7 +353,7 @@ def main():
                 
             if (current_item) and (mouse.clicking) and (placement): #Properly places game tile onto surface.
                 touching_tile = False
-                for item in block_cache:
+                for item in block_cache:    # TODO - possibly refactor this to be much more efficient.
                     for tile in block_cache[item]:
                         if mouse.Is_Touching(tile):
                             touching_tile = True
