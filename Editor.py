@@ -107,7 +107,7 @@ class DynamicTextObject: #This class allows for constantly updating text to be r
         self.colors = dict()
 
         l_n_n = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p'
-                 ,'q','r','s','t','u','v','w','x','y','z',' ',"'", ":", "(",")", '-','.','_'
+                 ,'q','r','s','t','u','v','w','x','y','z',' ',"'", ":", "(",")", '-','.','_', ","
                  ,'A', 'B','C','D','E', 'F', 'G', 'H', 'I','J', 'K','L','M','N','O'
                  ,'P', 'Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5'
                  ,'6','7','8','9','0']
@@ -271,6 +271,7 @@ def main():
 
     cache = TextureCache(renderer)
     block_cache = dict()
+    text_renderer = DynamicTextObject(renderer, 'font/joystix.ttf', size = 9)
 
     l = [650, 200]
     for block in tiles:
@@ -383,10 +384,10 @@ def main():
         # editing______________________________________
         if (game_state == 'EDITING'):
 
-            if len(block_cache) > 0:        #Renders block placement if block_cache is not empty
-                for block in block_cache:
-                    for x in block_cache[block]:
-                        x.Render((camera.x, camera.y))
+
+            for block in block_cache:
+                for x in block_cache[block]:
+                    x.Render((camera.x, camera.y))
 
             editor_items['Resources'].Render()
 
@@ -400,11 +401,16 @@ def main():
             if (ghost_tile):
                 ghost_tile.Render(alpha = 100) #Does ghost tile effect if block is selected from sub menu
 
+            if (current_item):
+                text_renderer.RenderText(text = 'Block Location (x, y): '+ #This renderes the absolute x and y position of the block being placed
+                                       str(mouse.x + (-1 * camera.x)) + ', '+ str(mouse.y + (-1 * camera.y)),
+                                       location = (40, 560, 10, 15))
             camera.Show(renderer)
 
         SDL_RenderPresent(renderer)
         SDL_Delay(10)
 
+    del text_renderer
     Deleter([menu_items])
     SDL_DestroyRenderer(renderer)
     SDL_DestroyWindow(window)
