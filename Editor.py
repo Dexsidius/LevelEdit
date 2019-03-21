@@ -161,13 +161,13 @@ class GameTile:
         self.y = y
         self.w = w
         self.h = h
-        self.d_rect = SDL_Rect(self.x, self.y, self.w, self.h)
+        self.rect = SDL_Rect(self.x, self.y, self.w, self.h)
 
     def Render(self, camera_pos = (0,0), alpha = 255):
-        self.d_rect.x = self.x + camera_pos[0]
-        self.d_rect.y = self.y + camera_pos[1]
+        self.rect.x = self.x + camera_pos[0]
+        self.rect.y = self.y + camera_pos[1]
         SDL_SetTextureAlphaMod(self.texture, alpha)
-        SDL_RenderCopy(self.c.renderer, self.texture, None, self.d_rect)
+        SDL_RenderCopy(self.c.renderer, self.texture, None, self.rect)
 
     def SetPos(self, x, y):
         self.x = x
@@ -351,13 +351,21 @@ def main():
                     current_item = item    #Sets the block selected in submenu to the current_item
                     ghost_tile = GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, tile_size[0], tile_size[1])
                 
-            if (current_item) and (mouse.clicking) and (placement): #Properly places game tile onto surface. *Beware of 'multiple clicking' issue.*
-                if current_item not in block_cache:
-                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
-                                                          mouse.y + (-1 * camera.y), tile_size[0], tile_size[1])]
-                else:
-                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
-                                                              mouse.y + (-1 * camera.y), tile_size[0], tile_size[1]))
+            if (current_item) and (mouse.clicking) and (placement): #Properly places game tile onto surface.
+                touching_tile = False
+                for item in block_cache:
+                    for tile in block_cache[item]:
+                        if mouse.Is_Touching(tile):
+                            touching_tile = True
+                            break
+
+                if (not touching_tile):
+                    if current_item not in block_cache:
+                        block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
+                                                              mouse.y + (-1 * camera.y), tile_size[0], tile_size[1])]
+                    else:
+                        block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
+                                                                  mouse.y + (-1 * camera.y), tile_size[0], tile_size[1]))
 
             if (ghost_tile):
                 ghost_tile.SetPos(mouse.x, mouse.y)
