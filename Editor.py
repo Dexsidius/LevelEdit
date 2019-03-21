@@ -354,20 +354,12 @@ def main():
                     ghost_tile = GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, tile_size[0], tile_size[1])
                 
             if (current_item) and (mouse.clicking) and (placement): #Properly places game tile onto surface.
-                touching_tile = False
-                for item in block_cache:    # TODO - possibly refactor this to be much more efficient.
-                    for tile in block_cache[item]:
-                        if mouse.Is_Touching(tile):
-                            touching_tile = True
-                            break
-
-                if (not touching_tile):
-                    if current_item not in block_cache:
-                        block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
-                                                              mouse.y + (-1 * camera.y), tile_size[0], tile_size[1])]
-                    else:
-                        block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
-                                                                  mouse.y + (-1 * camera.y), tile_size[0], tile_size[1]))
+                if current_item not in block_cache:
+                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
+                                                          mouse.y + (-1 * camera.y), tile_size[0], tile_size[1])]
+                else:
+                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
+                                                              mouse.y + (-1 * camera.y), tile_size[0], tile_size[1]))
 
             if (ghost_tile):
                 ghost_tile.SetPos(mouse.x, mouse.y)
