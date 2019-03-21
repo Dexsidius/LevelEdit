@@ -342,9 +342,9 @@ def main():
                 
             if (current_item) and (mouse.clicking): #Properly places game tile onto surface. *Beware of 'multiple clicking' issue.*
                 if current_item not in block_cache:
-                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, 20, 20)]
+                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, 32, 32)]
                 else:
-                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, 20, 20))
+                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, 32, 32))
             
             for block in block_cache:       #Ensures that placed blocks move along with camera
                 for x in block_cache[block]:
