@@ -254,6 +254,7 @@ def main():
     placement = False
     ghost_tile = None
     tile_size = (32, 32)
+    show_size = True
 
     # Objects____________________________________________
     mouse = Pointer()
@@ -405,6 +406,9 @@ def main():
                 text_renderer.RenderText(text = 'Block Location (x, y): '+ #This renderes the absolute x and y position of the block being placed
                                        str(mouse.x + (-1 * camera.x)) + ', '+ str(mouse.y + (-1 * camera.y)),
                                        location = (40, 560, 10, 15))
+                if (show_size):
+                    text_renderer.RenderText (text = '(' + str(tile_size[0]) + ',' + str(tile_size[1])+ ')',
+                                          location = (mouse.x - 20, mouse.y - 20, 7, 10))
             camera.Show(renderer)
 
         SDL_RenderPresent(renderer)
