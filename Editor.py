@@ -332,7 +332,9 @@ def main():
                     sub_menu = True
 
             for item in editor_items:
-                if (mouse.Is_Touching(editor_items[item])):
+
+                if (mouse.Is_Touching(editor_items['Resources'])
+                or (mouse.Is_Touching(editor_items[item]) and sub_menu)):
                     placement = False
 
             if (sub_menu):
@@ -345,7 +347,7 @@ def main():
             for item in editor_items:
                 if (item == 'Resources'):
                     pass
-                elif (mouse.Is_Clicking(editor_items[item])):
+                elif (mouse.Is_Clicking(editor_items[item]) and sub_menu):
                     current_item = item    #Sets the block selected in submenu to the current_item
                     ghost_tile = GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, tile_size[0], tile_size[1])
                 
@@ -372,7 +374,11 @@ def main():
 
         # editing______________________________________
         if (game_state == 'EDITING'):
-            camera.Show(renderer)
+
+            if len(block_cache) > 0:        #Renders block placement if block_cache is not empty
+                for block in block_cache:
+                    for x in block_cache[block]:
+                        x.Render((camera.x, camera.y))
 
             editor_items['Resources'].Render()
 
@@ -386,10 +392,7 @@ def main():
             if (ghost_tile):
                 ghost_tile.Render(alpha = 100) #Does ghost tile effect if block is selected from sub menu
 
-            if len(block_cache) > 0:        #Renders block placement if block_cache is not empty
-                for block in block_cache:
-                    for x in block_cache[block]:
-                        x.Render((camera.x, camera.y))
+            camera.Show(renderer)
 
         SDL_RenderPresent(renderer)
         SDL_Delay(10)
