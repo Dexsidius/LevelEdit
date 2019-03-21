@@ -282,7 +282,7 @@ def main():
     # Application Loop___________________________________
     while (running):
         keystate = SDL_GetKeyboardState(None)
-
+        mouse.clicking = False
         # Event Loop______________________________
         while (SDL_PollEvent(ctypes.byref(event))):
             mouse.Compute(event)
