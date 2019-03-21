@@ -170,7 +170,7 @@ class GameTile:
         SDL_RenderCopy(self.c.renderer, self.texture, None, self.d_rect)
 
     def GetPos(self):
-        return str(self.x) + ',' + str(self.y)
+        return (self.x, self.y)
 
     def Collide(self): #Either making a function to handle solid and soft tiles or make an entirely different class just for GameObjects
         pass
@@ -213,7 +213,7 @@ def Get_Resources():
 
     return resources
 
-def Get_Paths():
+def Get_Paths():      #Function returns a dictionary of filepaths to easily reference them with the block selection.  Key: (Block Name) Value: (Block Filepath)
     path = './resources/'
     paths = dict()
 
@@ -252,7 +252,7 @@ def main():
 
     # Objects____________________________________________
     mouse = Pointer()
-    camera = Camera(WIDTH, HEIGHT, 6)
+    camera = Camera(WIDTH, HEIGHT, 3)
     menu_items = {
         "Title": TextObject(renderer, "Map Editor", 400, 190, ['arcade', b'font/arcade.ttf'], location=(200, 100)),
         "New Map": TextObject(renderer, "Create  Map", 200, 50, ['arcade'], location=(280, 320)),
@@ -338,9 +338,24 @@ def main():
                 if (i == 'Resources'):
                     pass
                 elif (mouse.Is_Clicking(editor_items[i])):
-                    current_item = i
-                    block_cache[current_item] = tile_fp[current_item]
-
+                    current_item = i    #Sets the block selected in submenu to the current_item
+                
+            if (current_item) and (mouse.clicking): #Properly places game tile onto surface. *Beware of 'multiple clicking' issue.*
+                if current_item not in block_cache:
+                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, 20, 20)]
+                else:
+                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, 20, 20))
+            
+            for block in block_cache:       #Ensures that placed blocks move along with camera
+                for x in block_cache[block]:
+                    if keystate[SDL_SCANCODE_UP]:
+                        x.y += camera.speed
+                    if keystate[SDL_SCANCODE_DOWN]:
+                        x.y -= camera.speed
+                    if keystate[SDL_SCANCODE_LEFT]:
+                        x.x += camera.speed
+                    if keystate[SDL_SCANCODE_RIGHT]:
+                        x.x -= camera.speed
 
         # RENDERING_______________________________________
         SDL_SetRenderDrawColor(renderer, 220, 220, 220, 255)
@@ -364,9 +379,18 @@ def main():
                     else:
                         editor_items[item].Render()
 
-            if(current_item):
+            if (mouse.clicking):
+                if(current_item):       #Does ghost tile effect if block is selected from sub menu
+                    GameTile(cache, tile_fp[current_item], mouse.x + camera.x, mouse.y + camera.y, 20, 20).Render()
+                    print(current_item)
+
+            if (current_item):
                 GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, 20, 20).Render()
 
+            if len(block_cache) > 0:        #Renders block placement if block_cache is not empty
+                for block in block_cache:
+                    for x in block_cache[block]:
+                        x.Render(alpha = 255)
 
         SDL_RenderPresent(renderer)
         SDL_Delay(10)
