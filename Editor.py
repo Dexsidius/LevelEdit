@@ -321,7 +321,6 @@ def main():
 
             if mouse.Is_Clicking(menu_items['New Map']):
                 game_state = 'NAMING'
-                mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
                 SDL_StartTextInput()
 
             if mouse.Is_Clicking(menu_items['Quit']):
@@ -340,6 +339,7 @@ def main():
                     map_name = map_name.decode() + '.mx'
                     map_name = map_name.encode('utf-8')
                     SDL_SetWindowTitle(window, map_name + b' - Map Editor')
+                    mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
                     SDL_StopTextInput()
 
         # editing________________________________
