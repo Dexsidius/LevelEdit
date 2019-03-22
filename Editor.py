@@ -179,6 +179,9 @@ class GameTile:
     def Collide(self): #Either making a function to handle solid and soft tiles or make an entirely different class just for GameObjects
         pass
 
+    def GetInfo(self):
+        return (self.x, self.y, self.w, self.h)
+
 
 class Camera:
     def __init__(self, w, h, speed, cs = 40):
@@ -191,6 +194,22 @@ class Camera:
     def Show(self, renderer):
         SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255)
         SDL_RenderDrawRect(renderer, self._rect)
+
+
+class Clock:
+    def __init__(self):
+        self.last_time = 0
+        self.current_time = SDL_GetPerformanceCounter()
+        self.dt = 0
+        self.dt_s = 0
+        self.s = 0
+        self.count = 0.0
+
+    def Tick(self):
+        self.last_time = self.current_time
+        self.current_time = SDL_GetPerformanceCounter()
+        self.dt = (self.current_time - self.last_time) * 1000 / SDL_GetPerformanceFrequency()
+        self.dt_s = self.dt * .001
 
 
 # FUNCTIONS_________________________________________________________________________
@@ -217,7 +236,7 @@ def Get_Resources():
     return resources
 
 def Get_Paths():      #Function returns a dictionary of filepaths to easily reference them with the block selection.  Key: (Block Name) Value: (Block Filepath)
-    path = './resources/'
+    path = 'resources/'
     paths = dict()
 
     for l in os.listdir(path):
@@ -225,6 +244,30 @@ def Get_Paths():      #Function returns a dictionary of filepaths to easily refe
         paths[c[0]] = path + l
     
     return paths
+
+def SavetoFile(filepath, tile_filepaths, b_cache, tile_per_line = 10):
+    #This function saves the locations of the tiles, and where they are placed, to the .mx file
+    file = open(filepath, "w+")
+    for tile_type in b_cache:
+        file.write('*|'+tile_type+":"+tile_filepaths[tile_type]+':'+'\n')
+        line = '+|'
+        i = 0
+        for tile in b_cache[tile_type]:
+            if i == tile_per_line:
+                line += '\n'
+                file.write(line)
+                line = '+|'
+                i = 0
+            info = tile.GetInfo()
+            line += str(info[0]) + '-' + str(info[1]) + '-' + \
+                    str(info[2]) + '-' + str(info[3]) + ','
+            i += 1
+
+        if (len(line) >= 1):
+            line += '\n'
+            file.write(line)
+
+    file.close()
 
 
 # MAIN_______________________________________________________________________________
@@ -257,6 +300,8 @@ def main():
     tile_size = (32, 32)
     show_size = True
     error_message = False
+    show_file_saving = False
+    timer = 0
 
 
     # OBJECTS____________________________________________
@@ -270,7 +315,8 @@ def main():
     }
 
     editor_items = {
-        "Resources": TextObject(renderer, "Items", 80, 50, ['arcade'], location=(650, 530))
+        "Resources": TextObject(renderer, "Items", 80, 50, ['arcade'], location=(650, 530)),
+        "Save": TextObject(renderer, "Save  File", 100, 50, ['arcade'], location = (510, 530))
     }
 
     cache = TextureCache(renderer)
@@ -282,8 +328,11 @@ def main():
         editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location=l)
         l[1] += 50
 
+    clock = Clock()
+
     # APPLICATION LOOP___________________________________
     while (running):
+        clock.Tick()
         keystate = SDL_GetKeyboardState(None)
         mouse.clicking = False
         # EVENT LOOP______________________________
@@ -346,6 +395,7 @@ def main():
         if (game_state == 'EDITING'):
             placement = True
 
+            #camera speed
             if keystate[SDL_SCANCODE_UP]:
                 camera.y += camera.speed
             if keystate[SDL_SCANCODE_DOWN]:
@@ -355,6 +405,20 @@ def main():
             if keystate[SDL_SCANCODE_RIGHT]:
                 camera.x -= camera.speed
 
+            #main editor option highighting
+            for item in editor_items:
+                if item == 'Resources' or item == 'Save':
+                    if mouse.Is_Touching(editor_items[item]):
+                        editor_items[item].highlight = True
+                    else:
+                        editor_items[item].highlight = False
+
+            #editor file saving
+            if mouse.Is_Clicking(editor_items['Save']):
+                show_file_saving = True
+                SavetoFile("./saved/"+map_name.decode(), tile_fp, block_cache)
+
+            # managing sub menu stuff
             if (mouse.Is_Clicking(editor_items['Resources'])):
                 if (sub_menu):
                     sub_menu = False
@@ -362,20 +426,25 @@ def main():
                     sub_menu = True
 
             for item in editor_items:
-
                 if (mouse.Is_Touching(editor_items['Resources'])
+                or (mouse.Is_Touching(editor_items['Save']))
                 or (mouse.Is_Touching(editor_items[item]) and sub_menu)):
                     placement = False
 
+            #sub menu option highlighting
             if (sub_menu):
+                editor_items['Resources'].highlight = True
                 for item in editor_items:
-                    if (mouse.Is_Touching(editor_items[item])):
+                    if item == 'Resources' or item == 'Save':
+                        pass
+                    elif (mouse.Is_Touching(editor_items[item])):
                         editor_items[item].highlight = True
                     else:
                         editor_items[item].highlight = False
-            
+
+            #main editor functionality
             for item in editor_items:
-                if (item == 'Resources'):
+                if (item == 'Resources' or item == 'Save'):
                     pass
                 elif (mouse.Is_Clicking(editor_items[item]) and sub_menu):
                     current_item = item    #Sets the block selected in submenu to the current_item
@@ -423,10 +492,11 @@ def main():
                     x.Render((camera.x, camera.y))
 
             editor_items['Resources'].Render()
+            editor_items['Save'].Render()
 
             if (sub_menu):
                 for item in editor_items:
-                    if item == "Resources":
+                    if item == "Resources" or item == "Save":
                         pass
                     else:
                         editor_items[item].Render()
@@ -442,6 +512,13 @@ def main():
                     text_renderer.RenderText (text = '(' + str(tile_size[0]) + ',' + str(tile_size[1])+ ')',
                                           location = (mouse.x - 20, mouse.y - 20, 7, 10))
 
+            if (show_file_saving):
+                timer += clock.dt_s
+                text_renderer.RenderText("Saving text file...", location=(40, 20, 10, 25),
+                                         color=(140, 140, 140))
+                if (timer >= 1):
+                    show_file_saving = False
+                    timer = 0
 
             camera.Show(renderer)
 
