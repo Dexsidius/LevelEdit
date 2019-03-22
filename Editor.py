@@ -323,7 +323,7 @@ def main():
     block_cache = dict()
     text_renderer = DynamicTextObject(renderer, 'font/joystix.ttf', size = 9, colors = [(0,0,0), (140,140,140)])
 
-    l = [650, 200]
+    l = [650, 40]
     for block in tiles:
         editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location=l)
         l[1] += 50
