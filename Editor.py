@@ -255,6 +255,7 @@ def main():
     ghost_tile = None
     tile_size = (32, 32)
     show_size = True
+    text = b""
 
     # Objects____________________________________________
     mouse = Pointer()
@@ -278,8 +279,9 @@ def main():
     for block in tiles:
         editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location=l)
         l[1] += 50
-
     # Application Loop___________________________________
+
+    SDL_StartTextInput()
     while (running):
         keystate = SDL_GetKeyboardState(None)
         mouse.clicking = False
@@ -307,17 +309,33 @@ def main():
                     menu_items[item].highlight = False
 
             if mouse.Is_Clicking(menu_items['New Map']):
-                game_state = 'EDITING'
+                game_state = 'NAMING'
                 mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
 
             if mouse.Is_Clicking(menu_items['Quit']):
                 running = False
                 break
 
+        # naming____________________________________
+        if (game_state == 'NAMING'):
+
+            if (event.type == SDL_TEXTINPUT):
+                text += event.text.text
+            if (event.type == SDL_KEYDOWN):
+                if (event.key.keysym.scancode == SDL_SCANCODE_BACKSPACE):
+                    text = str().join(list(text.decode('utf-8'))[0:-1])
+                    text = text.encode('utf-8')
+            
+            if (keystate[SDL_SCANCODE_RETURN]):
+                game_state = 'EDITING'
+
+
+            
+
         # EDITING________________________________
         if (game_state == 'EDITING'):
             placement = True
-            SDL_SetWindowTitle(window, map_name + b'  Map Editor')
+            SDL_SetWindowTitle(window, text + b'  Map Editor')
             if keystate[SDL_SCANCODE_UP]:
                 camera.y += camera.speed
             if keystate[SDL_SCANCODE_DOWN]:
@@ -374,6 +392,11 @@ def main():
             for item in menu_items:
                 menu_items[item].Render()
 
+        # naming
+        if (game_state == 'NAMING'):
+            text_renderer.RenderText('Enter File Name: ' + text, (WIDTH//4, HEIGHT//2, 10, 25))
+
+
         # editing______________________________________
         if (game_state == 'EDITING'):
 
@@ -401,6 +424,10 @@ def main():
                 if (show_size):
                     text_renderer.RenderText (text = '(' + str(tile_size[0]) + ',' + str(tile_size[1])+ ')',
                                           location = (mouse.x - 20, mouse.y - 20, 7, 10))
+                if (keystate[SDL_SCANCODE_X]):
+                    current_item = None
+                    ghost_tile = None
+
             camera.Show(renderer)
 
         SDL_RenderPresent(renderer)
