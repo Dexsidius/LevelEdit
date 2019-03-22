@@ -227,21 +227,22 @@ def Get_Paths():      #Function returns a dictionary of filepaths to easily refe
     return paths
 
 
-
 # MAIN_______________________________________________________________________________
 def main():
     if (TTF_Init() < 0):
         print(TTF_GetError())
+        return -1
 
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0):
         print(SDL_GetError())
+        return -1
 
     window = SDL_CreateWindow(b"Map Editor - By Sardonicals", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
                               WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE)
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
     event = SDL_Event()
 
-    # Boolean States/Variables____________________________
+    # VARIABLES/STATES_________________________________
     running = True
     game_state = "MENU"
     paused = False
@@ -257,7 +258,7 @@ def main():
     show_size = True
     text = b""
 
-    # Objects____________________________________________
+    # OBJECTS____________________________________________
     mouse = Pointer()
     camera = Camera(WIDTH, HEIGHT, 3)
     menu_items = {
@@ -279,13 +280,18 @@ def main():
     for block in tiles:
         editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location=l)
         l[1] += 50
+<<<<<<< HEAD
     # Application Loop___________________________________
 
     SDL_StartTextInput()
+=======
+
+    # APPLICATION LOOP___________________________________
+>>>>>>> 46ecbb8e2e638dc5d6afc4034731b78f3333e4dc
     while (running):
         keystate = SDL_GetKeyboardState(None)
         mouse.clicking = False
-        # Event Loop______________________________
+        # EVENT LOOP______________________________
         while (SDL_PollEvent(ctypes.byref(event))):
             mouse.Compute(event)
             if (event.type == SDL_QUIT):
@@ -296,8 +302,7 @@ def main():
                 if (event.window.event == SDL_WINDOWEVENT_RESIZED):
                     SDL_RenderSetLogicalSize(renderer, WIDTH, HEIGHT)
 
-        # Application Logic______________________________
-
+        # LOGIC______________________________
         # menu__________________________________________
         if (game_state == 'MENU'):
             for item in menu_items:
@@ -311,11 +316,13 @@ def main():
             if mouse.Is_Clicking(menu_items['New Map']):
                 game_state = 'NAMING'
                 mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
+                SDL_SetWindowTitle(window, map_name + b'  Map Editor')
 
             if mouse.Is_Clicking(menu_items['Quit']):
                 running = False
                 break
 
+<<<<<<< HEAD
         # naming____________________________________
         if (game_state == 'NAMING'):
 
@@ -336,6 +343,12 @@ def main():
         if (game_state == 'EDITING'):
             placement = True
             SDL_SetWindowTitle(window, text + b'  Map Editor')
+=======
+        # editing________________________________
+        if (game_state == 'EDITING'):
+            placement = True
+
+>>>>>>> 46ecbb8e2e638dc5d6afc4034731b78f3333e4dc
             if keystate[SDL_SCANCODE_UP]:
                 camera.y += camera.speed
             if keystate[SDL_SCANCODE_DOWN]:
