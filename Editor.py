@@ -106,26 +106,21 @@ class DynamicTextObject: #This class allows for constantly updating text to be r
         self.font = TTF_OpenFont(font.encode('utf-8'), size)
         self.colors = dict()
 
-        l_n_n = ['a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p'
-                 ,'q','r','s','t','u','v','w','x','y','z',' ',"'", ":", "(",")", '-','.','_', ","
-                 ,'A', 'B','C','D','E', 'F', 'G', 'H', 'I','J', 'K','L','M','N','O'
-                 ,'P', 'Q','R','S','T','U','V','W','X','Y','Z','1','2','3','4','5'
-                 ,'6','7','8','9','0']
-
         for color in colors:
             self.colors[color] = dict()
-            for char in l_n_n:
+            for i in range(32, 126): #Now this converts the ascii values into the characters they represent
+                char = chr(i)
                 if char not in self.colors[color]:
                     surface = TTF_RenderText_Solid(self.font, char.encode('utf-8'), SDL_Color(color[0], color[1], color[2], 255))
                     self.colors[color][char] = SDL_CreateTextureFromSurface(self.r, surface)
                     SDL_FreeSurface(surface)
 
     def RenderText(self, text, location, color = (0,0,0), offset = 0):
-        x = 0
+        d_rect = SDL_Rect(location[0], location[1], location[2], location[3])
         for char in text:
-            d_rect = SDL_Rect(location[0] + x, location[1], location[2], location[3])
             SDL_RenderCopy(self.r, self.colors[color][char], None, d_rect)
-            x += location[2] + offset
+            d_rect.x += location[2] + offset
+        del d_rect
 
     def __del__(self):
         for color in list(self.colors):
@@ -227,6 +222,7 @@ def Deleter(dictionary_list):
         for item in list(dictionary):
             del dictionary[item]
 
+
 def Get_Resources():
     resources = []
     for path in os.listdir('./resources/'):
@@ -234,6 +230,7 @@ def Get_Resources():
         resources.append(c[0])
 
     return resources
+
 
 def Get_Paths():      #Function returns a dictionary of filepaths to easily reference them with the block selection.  Key: (Block Name) Value: (Block Filepath)
     path = 'resources/'
@@ -244,6 +241,7 @@ def Get_Paths():      #Function returns a dictionary of filepaths to easily refe
         paths[c[0]] = path + l
     
     return paths
+
 
 def SavetoFile(filepath, tile_filepaths, b_cache, tile_per_line = 10):
     #This function saves the locations of the tiles, and where they are placed, to the .mx file
@@ -269,6 +267,48 @@ def SavetoFile(filepath, tile_filepaths, b_cache, tile_per_line = 10):
 
     file.close()
 
+def LoadFromFile(filepath, b_cache, cache):
+    #This function loads the map created from the ".mx" file specified.
+    global tile_name
+    global tile_filepath
+
+    if len(filepath.split('\\')) > 1:
+        if('.mx' not in filepath.split('\\')[-1]):
+            return 0
+    else:
+        if('.mx' not in filepath.split('/')[-1]):
+            return 0
+
+    file = open(filepath, 'r')
+    tile_name = ''
+    tile_filepath = ''
+    for line in file:
+        section = line.split('|')
+        if (section[0] == '*'):
+            subsect = section[1].split(':')
+            tile_name = subsect[0]
+            tile_filepath = subsect[1]
+
+        elif (section[0] == '+'):
+            tiles_information_list = section[1].split(',')
+            for tile_info in tiles_information_list:
+                tile_xywh = tile_info.split('-')
+                if (len(tile_xywh) < 4):
+                    pass
+                else:
+                    x = int(tile_xywh[0])
+                    y = int(tile_xywh[1])
+                    w = int(tile_xywh[2])
+                    h = int(tile_xywh[3])
+                    if tile_name not in b_cache:
+                        b_cache[tile_name] = [GameTile(cache, tile_filepath, x, y, w, h)]
+                    else:
+                        b_cache[tile_name].append(GameTile(cache, tile_filepath, x, y, w, h))
+    file.close()
+
+    if (len(b_cache) ==0):
+        return 0
+    return 1
 
 # MAIN_______________________________________________________________________________
 def main():
@@ -291,7 +331,7 @@ def main():
     paused = False
     sub_menu = False
     creating_item = False
-    map_name = b'untitled'
+    map_name = b''
     tiles = Get_Resources()
     tile_fp = Get_Paths()
     current_item = None
@@ -302,6 +342,7 @@ def main():
     error_message = False
     show_file_saving = False
     timer = 0
+    filepath = ''
 
 
     # OBJECTS____________________________________________
@@ -321,7 +362,8 @@ def main():
 
     cache = TextureCache(renderer)
     block_cache = dict()
-    text_renderer = DynamicTextObject(renderer, 'font/joystix.ttf', size = 9, colors = [(0,0,0), (140,140,140)])
+    text_renderer = DynamicTextObject(renderer, 'font/joystix.ttf', size = 9,
+                                      colors = [(0,0,0), (140,140,140), (255,255,255)])
 
     l = [650, 200]
     for block in tiles:
@@ -356,6 +398,11 @@ def main():
                         map_name = str().join(list(map_name.decode('utf-8'))[0:-1])
                         map_name = map_name.encode('utf-8')
 
+            if (game_state == 'LOADING'):
+                if (event.type == SDL_DROPFILE):
+                    file = event.drop.file
+                    filepath = file.decode()
+
 
         # LOGIC_____________________________________________
         # menu__________________________________________
@@ -370,7 +417,11 @@ def main():
 
             if mouse.Is_Clicking(menu_items['New Map']):
                 game_state = 'NAMING'
+                map_name = b'untitled'
                 SDL_StartTextInput()
+
+            if mouse.Is_Clicking(menu_items['Load Map']):
+                game_state = 'LOADING'
 
             if mouse.Is_Clicking(menu_items['Quit']):
                 running = False
@@ -390,6 +441,24 @@ def main():
                     SDL_SetWindowTitle(window, map_name + b' - Map Editor')
                     mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
                     SDL_StopTextInput()
+
+        #loading____________________________________
+        if (game_state == 'LOADING'):
+            if filepath:
+                error_message = False
+            if (keystate[SDL_SCANCODE_RETURN]):
+                if not filepath:
+                    error_message = True
+                else:
+                    if len(filepath.split('\\')) > 1:
+                        map_name = filepath.split('\\')[-1].encode('utf-8')
+                    else:
+                        map_name = filepath.split('/')[-1].encode('utf-8')
+
+                    if (LoadFromFile(filepath, block_cache, cache)):
+                        SDL_SetWindowTitle(window, map_name + b' - Map Editor')
+                        mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
+                        game_state = 'EDITING'
 
         # editing________________________________
         if (game_state == 'EDITING'):
@@ -484,6 +553,21 @@ def main():
                                          location = ((WIDTH // 4),(HEIGHT//2) + 20, 10, 25 ),
                                          color = (140,140,140))
 
+        # loading_____________________________________
+        if (game_state == 'LOADING'):
+            text_renderer.RenderText('Drag and drop your file and press enter to load.',
+                                     (100, (HEIGHT // 2) - 60, 10, 25),
+                                     color = (255,255,255))
+            text_renderer.RenderText('file has to be a (.mx) file',
+                                     (100, (HEIGHT // 2) - 40, 10, 25),
+                                     color = (255, 255, 255))
+
+            text_renderer.RenderText('File: ' + filepath,
+                                     (100, HEIGHT // 2, 10, 25))
+            if (error_message):
+                text_renderer.RenderText("You have to load a file",
+                                         location=((WIDTH // 4), (HEIGHT // 2) + 20, 10, 25),
+                                         color=(140, 140, 140))
         # editing______________________________________
         if (game_state == 'EDITING'):
 
