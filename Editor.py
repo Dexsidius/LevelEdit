@@ -272,12 +272,8 @@ def LoadFromFile(filepath, b_cache, cache):
     global tile_name
     global tile_filepath
 
-    if len(filepath.split('\\')) > 1:
-        if('.mx' not in filepath.split('\\')[-1]):
-            return 0
-    else:
-        if('.mx' not in filepath.split('/')[-1]):
-            return 0
+    if not filepath.endswith('.mx'):
+        return 0
 
     file = open(filepath, 'r')
     tile_name = ''
@@ -310,8 +306,11 @@ def LoadFromFile(filepath, b_cache, cache):
         return 0
     return 1
 
+
 # MAIN_______________________________________________________________________________
 def main():
+    global error_message
+
     if (TTF_Init() < 0):
         print(TTF_GetError())
         return -1
@@ -339,7 +338,8 @@ def main():
     ghost_tile = None
     tile_size = (32, 32)
     show_size = True
-    error_message = False
+    error_message = ''
+    error = False
     show_file_saving = False
     timer = 0
     filepath = ''
@@ -432,9 +432,11 @@ def main():
 
             if (keystate[SDL_SCANCODE_RETURN]):
                 if (len(map_name.decode().split()) == 0):
-                    error_message = True
+                    error = True
+                    error_message = "You have to have a file name"
                 else:
-                    error_message = False
+                    error = False
+                    error_message = ''
                     game_state = 'EDITING'
                     map_name = map_name.decode() + '.mx'
                     map_name = map_name.encode('utf-8')
@@ -445,10 +447,16 @@ def main():
         #loading____________________________________
         if (game_state == 'LOADING'):
             if filepath:
-                error_message = False
+                if not filepath.endswith('.mx'):
+                    error = True
+                    error_message = 'Wrong File Extension'
+                else:
+                    error = False
+                    error_message = ''
             if (keystate[SDL_SCANCODE_RETURN]):
                 if not filepath:
-                    error_message = True
+                    error = True
+                    error_message = "You have to load a file"
                 else:
                     if len(filepath.split('\\')) > 1:
                         map_name = filepath.split('\\')[-1].encode('utf-8')
@@ -456,6 +464,8 @@ def main():
                         map_name = filepath.split('/')[-1].encode('utf-8')
 
                     if (LoadFromFile(filepath, block_cache, cache)):
+                        error = False
+                        error_message = ''
                         SDL_SetWindowTitle(window, map_name + b' - Map Editor')
                         mouse.Set_Cursor(SDL_SYSTEM_CURSOR_CROSSHAIR)
                         game_state = 'EDITING'
@@ -548,8 +558,8 @@ def main():
         if (game_state == 'NAMING'):
             text_renderer.RenderText('Enter File Name: ' + map_name.decode() + '(.mx)', (WIDTH//4, HEIGHT//2, 10, 25))
 
-            if (error_message):
-                text_renderer.RenderText("You have to have a file name",
+            if (error):
+                text_renderer.RenderText(error_message,
                                          location = ((WIDTH // 4),(HEIGHT//2) + 20, 10, 25 ),
                                          color = (140,140,140))
 
@@ -564,9 +574,9 @@ def main():
 
             text_renderer.RenderText('File: ' + filepath,
                                      (100, HEIGHT // 2, 10, 25))
-            if (error_message):
-                text_renderer.RenderText("You have to load a file",
-                                         location=((WIDTH // 4), (HEIGHT // 2) + 20, 10, 25),
+            if (error):
+                text_renderer.RenderText(error_message,
+                                         location=(100, (HEIGHT // 2) + 20, 10, 25),
                                          color=(140, 140, 140))
         # editing______________________________________
         if (game_state == 'EDITING'):
