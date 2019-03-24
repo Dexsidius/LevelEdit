@@ -451,7 +451,6 @@ def main():
     running = True
     game_state = "MENU"
     paused = False
-    sub_menu = False
     creating_item = False
     map_name = b''
     tiles = Get_Resources()
@@ -711,12 +710,6 @@ def main():
             editor_items['Save'].Render()
             resource_menu.Render(140)
 
-            if (sub_menu):
-                for item in editor_items:
-                    if item == "Resources" or item == "Save":
-                        pass
-                    else:
-                        editor_items[item].Render()
             if (ghost_tile):
                 ghost_tile.Render(alpha = 100) #Does ghost tile effect if block is selected from sub menu
 
