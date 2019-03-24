@@ -48,11 +48,18 @@ class Pointer:
         self.x = self.pointer.x
         self.y = self.pointer.y
 
+    def Is_Touching_Rect(self, rect): #version for rectangles
+        return SDL_HasIntersection(self.pointer, rect)
+
+    def Is_Clicking_Rect(self, rect):
+        return self.Is_Touching_Rect(rect) and self.clicking
+
     def Is_Touching(self, item):
-        return SDL_HasIntersection(self.pointer, item.rect)
+        return self.Is_Touching_Rect(item.rect)
 
     def Is_Clicking(self, item):
         return self.Is_Touching(item) and self.clicking
+
 
     def Is_R_Clicking(self, item):
         return self.Is_Touching(item) and self.r_clicking
@@ -79,8 +86,9 @@ class TextObject:
         SDL_FreeSurface(self.surface)
         self.rect = SDL_Rect(location[0], location[1], width, height)
         self.highlight = False
+        SDL_SetTextureBlendMode(self.message, SDL_BLENDMODE_BLEND)
 
-    def Render(self, x=None, y=None):
+    def Render(self, x=None, y=None, alpha = 255):
         if self.highlight:
             SDL_SetRenderDrawColor(self.r, self.color.r, self.color.g, self.color.b, self.color.a)
             SDL_RenderDrawRect(self.r, self.rect)
@@ -91,6 +99,7 @@ class TextObject:
         elif x and y:
             self.rect.x = x
             self.rect.y = y
+        SDL_SetTextureAlphaMod(self.message, alpha)
         SDL_RenderCopy(self.r, self.message, None, self.rect)
 
     def __del__(self):
@@ -145,6 +154,118 @@ class TextureCache:
     def __del__(self):
         for file in list(self._cache):
             SDL_DestroyTexture(self._cache[file])
+
+
+class Submenu:
+    def __init__(self, cache,  menu_item_info , size = (100, 100), location = (10, 10), color = (140, 140, 140),
+                 menu_item_offset = 50, scrolling = True, scroll_button_colors = (100, 100, 100)):
+        self.menu_item = dict()
+        self.selectable = dict()
+        self.renderer = cache.renderer
+        self.area = SDL_Rect(location[0], location[1], size[0], size[1])
+        self.area_color = color
+        self.scroll_color = scroll_button_colors
+        self.boundary_x = (self.area.x + self.area.w) - 1
+        self.boundary_y = (self.area.y + self.area.h) - (menu_item_info[1][1] - 20)
+        self.scrolling = True
+        self.activated = False
+        self.mouse = None
+
+        if scrolling:
+            self.up_button = SDL_Rect((self.boundary_x  - 27),
+                                      ((self.area.y + (self.area.h//2))  - 20), 20, 30)
+            self.down_button = SDL_Rect((self.boundary_x - 27),
+                                        ((self.area.y + (self.area.h//2))  + 20), 20, 30)
+            self.highlight_up_button = False
+            self.highlight_down_button = False
+
+        menu_item_xy = [self.area.x + 20, self.area.y + 30]
+        for option in menu_item_info[0]:
+            self.menu_item[option] = TextObject(self.renderer, option,
+                                           menu_item_info[1][0],   # The width of the option that's added to the menu (the button)
+                                           menu_item_info[1][1],   # The height of the option that's added (the button)
+                                           ['arcade'], location = menu_item_xy)
+            self.selectable[option] = False
+            menu_item_xy[1] += menu_item_offset
+
+    def Handler(self, mouse):
+        self.mouse = mouse
+
+        #option highlighting
+        if self.activated:
+            if self.scrolling:
+                if SDL_HasIntersection(mouse.pointer, self.up_button):
+                    self.highlight_up_button = True
+                else:
+                    self.highlight_up_button = False
+
+                if SDL_HasIntersection(mouse.pointer, self.down_button):
+                    self.highlight_down_button = True
+                else:
+                    self.highlight_down_button = False
+
+
+            for option in self.menu_item:
+                if mouse.Is_Touching(self.menu_item[option]) and self.selectable[option]:
+                    self.menu_item[option].highlight = True
+                else:
+                    self.menu_item[option].highlight = False
+
+        # moving the menu options (sorry Dexsidious)
+        if self.activated:
+            if self.scrolling:
+                if mouse.Is_Clicking_Rect(self.up_button):
+                    for option in self.menu_item:
+                        self.menu_item[option].rect.y += 10
+
+                if mouse.Is_Clicking_Rect(self.down_button):
+                    for option in self.menu_item:
+                        self.menu_item[option].rect.y -= 10
+
+        # managing whether the menu option can be selected
+        if self.activated:
+            for option in self.menu_item:
+                if ((self.menu_item[option].rect.y <= self.area.y)
+                or (self.menu_item[option].rect.y >= self.boundary_y)):
+                    self.selectable[option] = False
+                else:
+                    self.selectable[option] = True
+
+    def OptionClicked(self, item):
+        #this function checks if an option was clicked by the mouse.
+        if self.activated:
+            if (self.selectable[item]) and (self.mouse.Is_Clicking(self.menu_item[item])):
+                return True
+        return False
+
+    def Render(self, A = 255):
+        if self.activated:
+            SDL_SetRenderDrawColor(self.renderer, self.area_color[0], self.area_color[1], self.area_color[2], A)
+            SDL_RenderFillRect(self.renderer, self.area)
+            SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, A)
+            SDL_RenderDrawRect(self.renderer, self.area)
+
+            if self.scrolling:
+                SDL_SetRenderDrawColor(self.renderer, self.scroll_color[0], self.scroll_color[1], self.scroll_color[2],
+                                       A)
+                SDL_RenderFillRect(self.renderer, self.up_button)
+                SDL_RenderFillRect(self.renderer, self.down_button)
+
+                if self.highlight_up_button:
+                    SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+                    SDL_RenderDrawRect(self.renderer, self.up_button)
+
+                if self.highlight_down_button:
+                    SDL_SetRenderDrawColor(self.renderer, 0, 0, 0, 255)
+                    SDL_RenderDrawRect(self.renderer, self.down_button)
+
+            for option in self.menu_item:
+                if self.selectable[option]:
+                    self.menu_item[option].Render(alpha = A)
+
+    def __del__(self):
+        for option in list(self.menu_item):
+            del self.menu_item[option]
 
 
 class GameTile:
@@ -245,7 +366,7 @@ def Get_Paths():      #Function returns a dictionary of filepaths to easily refe
 
 def SavetoFile(filepath, tile_filepaths, b_cache, tile_per_line = 10):
     #This function saves the locations of the tiles, and where they are placed, to the .mx file
-    file = open(filepath, "w+")
+    file = open(filepath, "w")
     for tile_type in b_cache:
         file.write('*|'+tile_type+":"+tile_filepaths[tile_type]+':'+'\n')
         line = '+|'
@@ -266,6 +387,7 @@ def SavetoFile(filepath, tile_filepaths, b_cache, tile_per_line = 10):
             file.write(line)
 
     file.close()
+
 
 def LoadFromFile(filepath, b_cache, cache):
     #This function loads the map created from the ".mx" file specified.
@@ -323,6 +445,7 @@ def main():
                               WIDTH, HEIGHT, SDL_WINDOW_RESIZABLE)
     renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED)
     event = SDL_Event()
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND)
 
     # VARIABLES/STATES_________________________________
     running = True
@@ -366,11 +489,11 @@ def main():
                                       colors = [(0,0,0), (140,140,140), (255,255,255)])
 
     l = [650, 40]
-    for block in tiles:
-        editor_items[block] = TextObject(renderer, block, 80, 50, ['arcade'], location=l)
-        l[1] += 50
+
+    resource_menu = Submenu(cache,[tiles, (80, 50)], size = (150, 300),location = (630, 230))
 
     clock = Clock()
+
 
     # APPLICATION LOOP___________________________________
     while (running):
@@ -473,8 +596,9 @@ def main():
         # editing________________________________
         if (game_state == 'EDITING'):
             placement = True
+            resource_menu.Handler(mouse)
 
-            #camera speed
+            #camera movement
             if keystate[SDL_SCANCODE_UP]:
                 camera.y += camera.speed
             if keystate[SDL_SCANCODE_DOWN]:
@@ -486,47 +610,44 @@ def main():
 
             #main editor option highighting
             for item in editor_items:
-                if item == 'Resources' or item == 'Save':
-                    if mouse.Is_Touching(editor_items[item]):
-                        editor_items[item].highlight = True
-                    else:
-                        editor_items[item].highlight = False
+                if mouse.Is_Touching(editor_items[item]):
+                    editor_items[item].highlight = True
+                else:
+                    editor_items[item].highlight = False
 
             #editor file saving
             if mouse.Is_Clicking(editor_items['Save']):
                 show_file_saving = True
                 SavetoFile("./saved/"+map_name.decode(), tile_fp, block_cache)
 
-            # managing sub menu stuff
+            #resource menu activation
             if (mouse.Is_Clicking(editor_items['Resources'])):
-                if (sub_menu):
-                    sub_menu = False
+                if (resource_menu.activated):
+                    resource_menu.activated = False
                 else:
-                    sub_menu = True
+                    resource_menu.activated = True
 
+            #making sure things can't be placed through the resource menu
             for item in editor_items:
-                if (mouse.Is_Touching(editor_items['Resources'])
-                or (mouse.Is_Touching(editor_items['Save']))
-                or (mouse.Is_Touching(editor_items[item]) and sub_menu)):
+                if (mouse.Is_Touching(editor_items[item])):
+                    placement = False
+            for item in resource_menu.menu_item:
+                if (mouse.Is_Touching(resource_menu.menu_item[item]) and resource_menu.activated):
                     placement = False
 
+            if (mouse.Is_Touching_Rect(resource_menu.area) or
+                mouse.Is_Touching_Rect(resource_menu.up_button) or
+                mouse.Is_Touching_Rect(resource_menu.down_button)):
+                placement = False
+
             #sub menu option highlighting
-            if (sub_menu):
+            if (resource_menu.activated):
                 editor_items['Resources'].highlight = True
-                for item in editor_items:
-                    if item == 'Resources' or item == 'Save':
-                        pass
-                    elif (mouse.Is_Touching(editor_items[item])):
-                        editor_items[item].highlight = True
-                    else:
-                        editor_items[item].highlight = False
 
             #main editor functionality
-            for item in editor_items:
-                if (item == 'Resources' or item == 'Save'):
-                    pass
-                elif (mouse.Is_Clicking(editor_items[item]) and sub_menu):
-                    current_item = item    #Sets the block selected in submenu to the current_item
+            for option_name in resource_menu.menu_item:
+                if (resource_menu.OptionClicked(option_name)):
+                    current_item = option_name    #Sets the block name referenced in resource menu to the current_item
                     ghost_tile = GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, tile_size[0], tile_size[1])
                 
             if (current_item) and (mouse.clicking) and (placement): #Properly places game tile onto surface.
@@ -578,6 +699,7 @@ def main():
                 text_renderer.RenderText(error_message,
                                          location=(100, (HEIGHT // 2) + 20, 10, 25),
                                          color=(140, 140, 140))
+
         # editing______________________________________
         if (game_state == 'EDITING'):
 
@@ -587,6 +709,7 @@ def main():
 
             editor_items['Resources'].Render()
             editor_items['Save'].Render()
+            resource_menu.Render(140)
 
             if (sub_menu):
                 for item in editor_items:
@@ -594,7 +717,6 @@ def main():
                         pass
                     else:
                         editor_items[item].Render()
-
             if (ghost_tile):
                 ghost_tile.Render(alpha = 100) #Does ghost tile effect if block is selected from sub menu
 
@@ -620,7 +742,8 @@ def main():
         SDL_Delay(10)
 
     del text_renderer
-    Deleter([menu_items])
+    del resource_menu
+    Deleter([menu_items, editor_items])
     SDL_DestroyRenderer(renderer)
     SDL_DestroyWindow(window)
     SDL_Quit()
