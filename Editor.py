@@ -437,7 +437,7 @@ def main():
         print(TTF_GetError())
         return -1
 
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) < 0):
+    if (SDL_Init(SDL_INIT_VIDEO) < 0):
         print(SDL_GetError())
         return -1
 
@@ -451,7 +451,6 @@ def main():
     running = True
     game_state = "MENU"
     paused = False
-    sub_menu = False
     creating_item = False
     map_name = b''
     tiles = Get_Resources()
@@ -475,7 +474,7 @@ def main():
 
     # OBJECTS____________________________________________
     mouse = Pointer()
-    camera = Camera(WIDTH, HEIGHT, 3)
+    camera = Camera(WIDTH, HEIGHT, speed = 3)
     menu_items = {
         "Title": TextObject(renderer, "Map Editor", 400, 190, ['arcade', b'font/arcade.ttf'], location=(200, 100)),
         "New Map": TextObject(renderer, "Create  Map", 200, 50, ['arcade'], location=(280, 320)),
@@ -640,10 +639,11 @@ def main():
                 if (mouse.Is_Touching(resource_menu.menu_item[item]) and resource_menu.activated):
                     placement = False
 
-            if (mouse.Is_Touching_Rect(resource_menu.area) or
-                mouse.Is_Touching_Rect(resource_menu.up_button) or
-                mouse.Is_Touching_Rect(resource_menu.down_button)):
-                placement = False
+            if resource_menu.activated:
+                if (mouse.Is_Touching_Rect(resource_menu.area) or
+                    mouse.Is_Touching_Rect(resource_menu.up_button) or
+                    mouse.Is_Touching_Rect(resource_menu.down_button)):
+                    placement = False
 
             #sub menu option highlighting
             if (resource_menu.activated):
@@ -763,12 +763,6 @@ def main():
             editor_items['Save'].Render()
             resource_menu.Render(140)
 
-            if (sub_menu):
-                for item in editor_items:
-                    if item == "Resources" or item == "Save":
-                        pass
-                    else:
-                        editor_items[item].Render()
             if (ghost_tile):
                 ghost_tile.Render(alpha = 100) #Does ghost tile effect if block is selected from sub menu
 
