@@ -282,6 +282,8 @@ class GameTile:
     def Render(self, camera_pos = (0,0), alpha = 255):
         self.rect.x = self.x + camera_pos[0]
         self.rect.y = self.y + camera_pos[1]
+        self.rect.w = self.w
+        self.rect.h = self.h
         SDL_SetTextureAlphaMod(self.texture, alpha)
         SDL_RenderCopy(self.c.renderer, self.texture, None, self.rect)
 
@@ -465,8 +467,7 @@ def main():
     show_file_saving = False
     timer = 0
     filepath = ''
-    increase_x = False
-    increase_y = False
+    increase_wh = False
     pos_at_push = (0, 0)
     current_x = 0
     current_y = 0
@@ -529,6 +530,17 @@ def main():
                 if (event.type == SDL_DROPFILE):
                     file = event.drop.file
                     filepath = file.decode()
+
+            if (game_state == 'EDITING'):
+                if (event.type == SDL_KEYDOWN):  # Button handler for increasing the x and y of current tile
+                    if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL):
+                        increase_wh = True
+                        current_x = mouse.x
+                        current_y = mouse.y
+
+                if (event.type == SDL_KEYUP):
+                    if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL):
+                        increase_wh = False
 
 
         # LOGIC_____________________________________________
@@ -654,31 +666,17 @@ def main():
                 if (resource_menu.OptionClicked(option_name)):
                     current_item = option_name    #Sets the block name referenced in resource menu to the current_item
                     ghost_tile = GameTile(cache, tile_fp[current_item], mouse.x, mouse.y, tile_size[0], tile_size[1])
-            
-            if (event.type == SDL_KEYDOWN):  # Button handler for increasing the x and y of current tile
-                if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL):
-                    increase_x = True
-                    current_x = mouse.x
-                if (event.key.keysym.scancode == SDL_SCANCODE_LALT):
-                    increase_y = True
-                    current_y = mouse.y
-                    
-            if (event.type == SDL_KEYUP):
-                if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL):
-                    increase_x = False
-                if (event.key.keysym.scancode == SDL_SCANCODE_LALT):
-                    increase_y = False
 
             if (current_item) and (mouse.clicking) and (placement): #Properly places game tile onto surface.
 
                 if current_item not in block_cache:
-                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
-                                                          mouse.y + (-1 * camera.y), tile_size[0], tile_size[1])]
+                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], ghost_tile.x + (-1 * camera.x),
+                                                          ghost_tile.y + (-1 * camera.y), tile_size[0], tile_size[1])]
                 else:
-                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], mouse.x + (-1 * camera.x),
-                                                              mouse.y + (-1 * camera.y), tile_size[0], tile_size[1]))
+                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], ghost_tile.x + (-1 * camera.x),
+                                                              ghost_tile.y + (-1 * camera.y), tile_size[0], tile_size[1]))
             
-            if (increase_x) and (placement):     #Algorithm for changing tile size altering for width
+            if (increase_wh and placement):     #Algorithm for changing tile size altering for width
                 if (current_x == mouse.x):
                     pass
                 elif (current_x < mouse.x):
@@ -691,8 +689,7 @@ def main():
                     new_size = (x, tile_size[1])
                     tile_size = new_size
                     current_x = mouse.x
-            
-            if (increase_y) and (placement):     #Size altering for Height
+
                 if (current_y == mouse.y):
                     pass
                 elif (current_y < mouse.y):
@@ -709,13 +706,13 @@ def main():
                     current_y = mouse.y
 
             if (ghost_tile):
-                ghost_tile.SetPos(mouse.x, mouse.y)
+                if (not increase_wh):
+                    ghost_tile.SetPos(mouse.x, mouse.y)
+                ghost_tile.w, ghost_tile.h = tile_size[0], tile_size[1]
 
             if (keystate[SDL_SCANCODE_X]):
                 current_item = None
                 ghost_tile = None
-
-
 
 
         # RENDERING_______________________________________
