@@ -773,7 +773,7 @@ def main():
 
             if (show_file_saving):
                 timer += clock.dt_s
-                text_renderer.RenderText("Saving text file...", location=(40, 20, 10, 25),
+                text_renderer.RenderText("Saving map file...", location=(40, 20, 10, 25),
                                          color=(140, 140, 140))
                 if (timer >= 1):
                     show_file_saving = False
