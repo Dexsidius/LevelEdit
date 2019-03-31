@@ -765,7 +765,7 @@ def main():
 
             if (current_item):
                 text_renderer.RenderText(text = 'Block Location (x, y): '+ #This renderes the absolute x and y position of the block being placed
-                                       str(mouse.x + (-1 * camera.x)) + ', '+ str(mouse.y + (-1 * camera.y)),
+                                       str(ghost_tile.x + (-1 * camera.x)) + ', '+ str(ghost_tile.y + (-1 * camera.y)),
                                        location = (40, 560, 10, 15))
                 if (show_size):
                     text_renderer.RenderText (text = '(' + str(tile_size[0]) + ',' + str(tile_size[1])+ ')',
