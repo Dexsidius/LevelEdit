@@ -676,7 +676,7 @@ def main():
                     block_cache[current_item].append(GameTile(cache, tile_fp[current_item], ghost_tile.x + (-1 * camera.x),
                                                               ghost_tile.y + (-1 * camera.y), tile_size[0], tile_size[1]))
             
-            if (increase_wh and placement):     #Algorithm for changing tile size altering for width
+            if (increase_wh):     #Algorithm for changing tile size altering for width
                 if (current_x == mouse.x):
                     pass
                 elif (current_x < mouse.x):
