@@ -467,7 +467,6 @@ def main():
     filepath = ''
     increase_x = False
     increase_y = False
-    pos_at_push = (0, 0)
     current_x = 0
     current_y = 0
 
@@ -682,12 +681,12 @@ def main():
                 if (current_x == mouse.x):
                     pass
                 elif (current_x < mouse.x):
-                    x = tile_size[0] + (-1*(current_x - mouse.x))
+                    x = abs(tile_size[0] + (-1*(current_x - mouse.x)))
                     new_size = (x, tile_size[1])
                     tile_size = new_size
                     current_x = mouse.x
                 elif (current_x > mouse.x):
-                    x = tile_size[0] - (current_x - mouse.x)
+                    x = abs(tile_size[0] - (current_x - mouse.x))
                     new_size = (x, tile_size[1])
                     tile_size = new_size
                     current_x = mouse.x
@@ -696,13 +695,13 @@ def main():
                 if (current_y == mouse.y):
                     pass
                 elif (current_y < mouse.y):
-                    y = tile_size[1] + (-1*(current_y - mouse.y))
+                    y = abs(tile_size[1] + (-1*(current_y - mouse.y)))
                     new_size = (tile_size[0], y)
                     tile_size = new_size
                     ghost_tile.h = tile_size[1]
                     current_y = mouse.y
                 elif (current_y > mouse.y):
-                    y = tile_size[1] - (current_y - mouse.y)
+                    y = abs(tile_size[1] - (current_y - mouse.y))
                     new_size = (tile_size[0], y)
                     tile_size = new_size
                     ghost_tile.h = tile_size[1]
