@@ -533,13 +533,13 @@ def main():
 
             if (game_state == 'EDITING'):
                 if (event.type == SDL_KEYDOWN):  # Button handler for increasing the x and y of current tile
-                    if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL):
+                    if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT):
                         increase_wh = True
                         current_x = mouse.x
                         current_y = mouse.y
 
                 if (event.type == SDL_KEYUP):
-                    if (event.key.keysym.scancode == SDL_SCANCODE_LCTRL):
+                    if (event.key.keysym.scancode == SDL_SCANCODE_LSHIFT):
                         increase_wh = False
 
 
