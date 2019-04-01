@@ -485,7 +485,7 @@ def main():
 
     editor_items = {
         "Resources": TextObject(renderer, "Items", 80, 50, ['arcade'], location=(650, 530)),
-        "Save": TextObject(renderer, "Save  File", 100, 50, ['arcade'], location = (510, 530))
+        "Save": TextObject(renderer, "Save  File", 110, 50, ['arcade'], location = (507, 530))
     }
 
     cache = TextureCache(renderer)
@@ -676,7 +676,7 @@ def main():
                     block_cache[current_item].append(GameTile(cache, tile_fp[current_item], ghost_tile.x + (-1 * camera.x),
                                                               ghost_tile.y + (-1 * camera.y), tile_size[0], tile_size[1]))
             
-            if (increase_wh):     #Algorithm for changing tile size altering for width
+            if (increase_wh and ghost_tile):     #Algorithm for changing tile size altering for width
                 if (current_x == mouse.x):
                     pass
                 elif (current_x < mouse.x):
