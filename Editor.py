@@ -742,14 +742,14 @@ def main():
             text_renderer.RenderText('Drag and drop your file and press enter to load.\n'
                                      'file has to be a (.mx) file.',
                                      (100, (HEIGHT // 2) - 60, 10, 25),
-                                     color = (169, 169, 169))
+                                     color = (140, 140, 140))
 
             text_renderer.RenderText('File: ' + filepath,
                                      (100, HEIGHT // 2, 10, 25))
             if (error):
                 text_renderer.RenderText(error_message,
                                          location=(100, (HEIGHT // 2) + 20, 10, 25),
-                                         color=(140, 140, 140))
+                                         color=(169, 169, 169))
 
         # editing______________________________________
         if (game_state == 'EDITING'):
