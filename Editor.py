@@ -127,8 +127,12 @@ class DynamicTextObject: #This class allows for constantly updating text to be r
     def RenderText(self, text, location, color = (0,0,0), offset = 0):
         d_rect = SDL_Rect(location[0], location[1], location[2], location[3])
         for char in text:
-            SDL_RenderCopy(self.r, self.colors[color][char], None, d_rect)
-            d_rect.x += location[2] + offset
+            if char == '\n':
+                d_rect.x = location[0]
+                d_rect.y += location[3] - 5
+            else:
+                SDL_RenderCopy(self.r, self.colors[color][char], None, d_rect)
+                d_rect.x += location[2] + offset
         del d_rect
 
     def __del__(self):
@@ -491,7 +495,7 @@ def main():
     cache = TextureCache(renderer)
     block_cache = dict()
     text_renderer = DynamicTextObject(renderer, 'font/joystix.ttf', size = 9,
-                                      colors = [(0,0,0), (140,140,140), (255,255,255)])
+                                      colors = [(0,0,0), (140,140,140), (255,255,255), (169,169,169)])
 
     l = [650, 40]
 
@@ -730,17 +734,15 @@ def main():
 
             if (error):
                 text_renderer.RenderText(error_message,
-                                         location = ((WIDTH // 4),(HEIGHT//2) + 20, 10, 25 ),
+                                         location = ((WIDTH // 4), (HEIGHT//2) + 20, 10, 25 ),
                                          color = (140,140,140))
 
         # loading_____________________________________
         if (game_state == 'LOADING'):
-            text_renderer.RenderText('Drag and drop your file and press enter to load.',
+            text_renderer.RenderText('Drag and drop your file and press enter to load.\n'
+                                     'file has to be a (.mx) file.',
                                      (100, (HEIGHT // 2) - 60, 10, 25),
-                                     color = (255,255,255))
-            text_renderer.RenderText('file has to be a (.mx) file',
-                                     (100, (HEIGHT // 2) - 40, 10, 25),
-                                     color = (255, 255, 255))
+                                     color = (169, 169, 169))
 
             text_renderer.RenderText('File: ' + filepath,
                                      (100, HEIGHT // 2, 10, 25))
