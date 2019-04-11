@@ -438,6 +438,7 @@ def LoadFromFile(filepath, b_cache, cache):
 # MAIN_______________________________________________________________________________
 def main():
     global error_message
+    global removing_tile
 
     if (TTF_Init() < 0):
         print(TTF_GetError())
@@ -475,7 +476,9 @@ def main():
     pos_at_push = (0, 0)
     current_x = 0
     current_y = 0
-
+    tile_stack = []
+    removing_tile = False
+    button_cooldown = 1.0
 
     # OBJECTS____________________________________________
     mouse = Pointer()
@@ -596,6 +599,7 @@ def main():
                 else:
                     error = False
                     error_message = ''
+
             if (keystate[SDL_SCANCODE_RETURN]):
                 if not filepath:
                     error = True
@@ -627,6 +631,9 @@ def main():
                 camera.x += camera.speed
             if keystate[SDL_SCANCODE_RIGHT]:
                 camera.x -= camera.speed
+
+            if keystate[SDL_SCANCODE_LCTRL] and keystate[SDL_SCANCODE_Z]:
+                removing_tile = True
 
             #main editor option highighting
             for item in editor_items:
@@ -679,6 +686,19 @@ def main():
                 else:
                     block_cache[current_item].append(GameTile(cache, tile_fp[current_item], ghost_tile.x + (-1 * camera.x),
                                                               ghost_tile.y + (-1 * camera.y), tile_size[0], tile_size[1]))
+                tile_stack.append(current_item)
+
+            if (removing_tile): #removes a placed tile
+                button_cooldown -= clock.dt_s
+                if button_cooldown <= 0.6:
+                    print(removing_tile)
+                    if len(tile_stack) > 0:
+                        removed_tile_type = tile_stack.pop(-1)
+                        tile = block_cache[removed_tile_type].pop(-1)
+                        del tile
+                    button_cooldown = 1.0
+                    removing_tile = False
+
             
             if (increase_wh and ghost_tile):     #Algorithm for changing tile size altering for width
                 if (current_x == mouse.x):
