@@ -690,7 +690,7 @@ def main():
 
             if (removing_tile): #removes a placed tile
                 button_cooldown -= clock.dt_s
-                if button_cooldown <= 0.6:
+                if button_cooldown <= .75:
                     if len(tile_stack) > 0:
                         removed_tile_type = tile_stack.pop(-1)
                         tile = block_cache[removed_tile_type].pop(-1)
