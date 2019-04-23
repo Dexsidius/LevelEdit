@@ -430,7 +430,7 @@ def LoadFromFile(filepath, b_cache, cache):
                         b_cache[tile_name].append(GameTile(cache, tile_filepath, x, y, w, h))
     file.close()
 
-    if (len(b_cache) ==0):
+    if (len(b_cache) == 0):
         return 0
     return 1
 
@@ -681,11 +681,11 @@ def main():
             if (current_item) and (mouse.clicking) and (placement): #Properly places game tile onto surface.
 
                 if current_item not in block_cache:
-                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], ghost_tile.x + (-1 * camera.x),
-                                                          ghost_tile.y + (-1 * camera.y), tile_size[0], tile_size[1])]
+                    block_cache[current_item] = [GameTile(cache, tile_fp[current_item], (ghost_tile.x - camera.x),
+                                                          (ghost_tile.y - camera.y), tile_size[0], tile_size[1])]
                 else:
-                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], ghost_tile.x + (-1 * camera.x),
-                                                              ghost_tile.y + (-1 * camera.y), tile_size[0], tile_size[1]))
+                    block_cache[current_item].append(GameTile(cache, tile_fp[current_item], (ghost_tile.x - camera.x),
+                                                              (ghost_tile.y - camera.y), tile_size[0], tile_size[1]))
                 tile_stack.append(current_item)
 
             if (removing_tile): #removes a placed tile
@@ -786,7 +786,7 @@ def main():
 
             if (current_item):
                 text_renderer.RenderText(text = 'Block Location (x, y): '+ #This renderes the absolute x and y position of the block being placed
-                                       str(ghost_tile.x + (-1 * camera.x)) + ', '+ str(ghost_tile.y + (-1 * camera.y)),
+                                       str((ghost_tile.x - camera.x)) + ', '+ str((ghost_tile.y - camera.y)),
                                        location = (40, 560, 10, 15))
                 if (show_size):
                     text_renderer.RenderText (text = '(' + str(tile_size[0]) + ',' + str(tile_size[1])+ ')',
@@ -794,7 +794,7 @@ def main():
 
             if (show_file_saving):
                 timer += clock.dt_s
-                text_renderer.RenderText("Saving map file...", location=(40, 20, 10, 25),
+                text_renderer.RenderText("Saving map file...", location = (40, 20, 10, 25),
                                          color=(140, 140, 140))
                 if (timer >= 1):
                     show_file_saving = False
