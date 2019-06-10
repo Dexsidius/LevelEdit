@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="cd7efa58-9597-4bea-9897-10813ff16eb8" name="Default Changelist" comment="">
+    <list default="true" id="cd7efa58-9597-4bea-9897-10813ff16eb8" name="Default Changelist" comment="Minor cleanup. Fixes constantly spawning ghost&#10;tile. Fixes bug whereby selecting a tile places one on screen at the same time.">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/Map_Editor.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Map_Editor.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Editor.py" beforeDir="false" afterPath="$PROJECT_DIR$/Editor.py" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -15,13 +19,23 @@
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/Editor.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="468">
-              <caret line="293" lean-forward="true" selection-start-line="293" selection-end-line="293" />
+            <state relative-caret-position="37">
+              <caret line="523" column="69" selection-start-line="523" selection-start-column="69" selection-end-line="523" selection-end-column="69" />
             </state>
           </provider>
         </entry>
       </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/.gitignore">
+          <provider selected="true" editor-type-id="text-editor" />
+        </entry>
+      </file>
     </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>stopt</find>
+    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="PREVIOUS_COMMIT_AUTHORS">
@@ -34,6 +48,7 @@
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
+        <option value="$PROJECT_DIR$/.gitignore" />
         <option value="$PROJECT_DIR$/Editor.py" />
       </list>
     </option>
@@ -48,26 +63,28 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
+      <pane id="Scope" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
             <path>
-              <item name="Map_Editor" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Map_Editor" type="462c0819:PsiDirectoryNode" />
+              <item name="Map-Editor" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Map-Editor" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
-              <item name="Map_Editor" type="b2602c69:ProjectViewProjectNode" />
-              <item name="Map_Editor" type="462c0819:PsiDirectoryNode" />
-              <item name="resources" type="462c0819:PsiDirectoryNode" />
+              <item name="Map-Editor" type="b2602c69:ProjectViewProjectNode" />
+              <item name="Map-Editor" type="462c0819:PsiDirectoryNode" />
+              <item name="saved" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
         </subPane>
       </pane>
-      <pane id="Scope" />
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
+    <property name="add_unversioned_files" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
   </component>
@@ -140,19 +157,20 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="28" width="1920" height="1052" extended-state="6" />
+    <frame x="0" y="27" width="1920" height="1053" extended-state="6" />
+    <editor active="true" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.134375" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13389562" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info active="true" anchor="bottom" id="Find" order="1" visible="true" weight="0.3290735" />
-      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49947917" visible="true" weight="0.3290735" />
+      <window_info active="true" anchor="bottom" id="Run" order="2" sideWeight="0.49947917" visible="true" weight="0.32896176" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
       <window_info anchor="bottom" id="TODO" order="6" />
-      <window_info anchor="bottom" id="Version Control" order="7" />
+      <window_info anchor="bottom" id="Version Control" order="7" weight="0.32896176" />
       <window_info anchor="bottom" id="Terminal" order="8" />
       <window_info anchor="bottom" id="Event Log" order="9" sideWeight="0.5005208" side_tool="true" weight="0.3290735" />
       <window_info anchor="bottom" id="Python Console" order="10" />
@@ -167,13 +185,17 @@
     <option name="LAST_COMMIT_MESSAGE" value="Minor cleanup. Fixes constantly spawning ghost&#10;tile. Fixes bug whereby selecting a tile places one on screen at the same time." />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/os">
+    <entry file="file://$PROJECT_DIR$/os" />
+    <entry file="file://$PROJECT_DIR$/derpity.txt">
+      <provider selected="true" editor-type-id="text-editor" />
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.gitignore">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/Editor.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="468">
-          <caret line="293" lean-forward="true" selection-start-line="293" selection-end-line="293" />
+        <state relative-caret-position="37">
+          <caret line="523" column="69" selection-start-line="523" selection-start-column="69" selection-end-line="523" selection-end-column="69" />
         </state>
       </provider>
     </entry>

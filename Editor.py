@@ -431,8 +431,8 @@ def LoadFromFile(filepath, b_cache, cache):
     file.close()
 
     if (len(b_cache) == 0):
-        return 0
-    return 1
+        return False
+    return True
 
 
 # MAIN_______________________________________________________________________________
