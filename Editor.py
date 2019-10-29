@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*
 import os
 os.environ["PYSDL2_DLL_PATH"] = os.path.dirname(os.path.abspath(__file__))
@@ -164,6 +164,7 @@ class Submenu:
     def __init__(self, cache,  menu_item_info , size = (100, 100), location = (10, 10), color = (140, 140, 140),
                  menu_item_offset = 50, scrolling = True, scroll_button_colors = (100, 100, 100)):
         self.menu_item = dict()
+        self.icons = dict()
         self.selectable = dict()
         self.renderer = cache.renderer
         self.area = SDL_Rect(location[0], location[1], size[0], size[1])
@@ -189,6 +190,8 @@ class Submenu:
                                            menu_item_info[1][0],   # The width of the option that's added to the menu (the button)
                                            menu_item_info[1][1],   # The height of the option that's added (the button)
                                            ['arcade'], location = menu_item_xy)
+            self.icons[option] = GameTile(cache, 'resources/'+option+'.bmp', menu_item_xy[0] + menu_item_info[1][0] + 15,
+                                                                             menu_item_xy[1] + 15, 20, 20)
             self.selectable[option] = False
             menu_item_xy[1] += menu_item_offset
 
@@ -221,10 +224,12 @@ class Submenu:
                 if mouse.Is_Clicking_Rect(self.up_button):
                     for option in self.menu_item:
                         self.menu_item[option].rect.y += 10
+                        self.icons[option].y += 10
 
                 if mouse.Is_Clicking_Rect(self.down_button):
                     for option in self.menu_item:
                         self.menu_item[option].rect.y -= 10
+                        self.icons[option].y -= 10
 
         # managing whether the menu option can be selected
         if self.activated:
@@ -266,6 +271,7 @@ class Submenu:
             for option in self.menu_item:
                 if self.selectable[option]:
                     self.menu_item[option].Render(alpha = A)
+                    self.icons[option].Render(alpha = A)
 
     def __del__(self):
         for option in list(self.menu_item):
@@ -502,7 +508,7 @@ def main():
 
     l = [650, 40]
 
-    resource_menu = Submenu(cache,[tiles, (80, 50)], size = (150, 300),location = (630, 230))
+    resource_menu = Submenu(cache, [tiles, (80, 50)], size = (180, 300),location = (600, 230))
 
     clock = Clock()
 
@@ -643,7 +649,8 @@ def main():
                     editor_items[item].highlight = False
 
             #editor file saving
-            if mouse.Is_Clicking(editor_items['Save']):
+            if (mouse.Is_Clicking(editor_items['Save']) or
+                (keystate[SDL_SCANCODE_LCTRL] and keystate[SDL_SCANCODE_S])):
                 show_file_saving = True
                 SavetoFile("./saved/"+map_name.decode(), tile_fp, block_cache)
 
