@@ -42,11 +42,11 @@ class Pointer:
                 self.r_clicking = False
 
         if (event.type == SDL_MOUSEMOTION):
-            self.pointer.x = event.motion.x
-            self.pointer.y = event.motion.y
+            self.pointer.x = event.motion.x - (self.pointer.w // 2)
+            self.pointer.y = event.motion.y - (self.pointer.h // 2)
 
-        self.x = self.pointer.x
-        self.y = self.pointer.y
+        self.x = (self.pointer.x + (self.pointer.w // 2))
+        self.y = (self.pointer.y + (self.pointer.h // 2))
 
     def Is_Touching_Rect(self, rect): #version for rectangles
         return SDL_HasIntersection(self.pointer, rect)
@@ -190,8 +190,8 @@ class Submenu:
                                            menu_item_info[1][0],   # The width of the option that's added to the menu (the button)
                                            menu_item_info[1][1],   # The height of the option that's added (the button)
                                            ['arcade'], location = menu_item_xy)
-            self.icons[option] = GameTile(cache, 'resources/'+option+'.bmp', menu_item_xy[0] + menu_item_info[1][0] + 15,
-                                                                             menu_item_xy[1] + 15, 20, 20)
+            self.icons[option] = GameTile(cache, 'resources/'+option+'.bmp', menu_item_xy[0] + menu_item_info[1][0] + 26,
+                                                                             menu_item_xy[1] + 26, 20, 20)
             self.selectable[option] = False
             menu_item_xy[1] += menu_item_offset
 
@@ -290,8 +290,8 @@ class GameTile:
         self.rect = SDL_Rect(self.x, self.y, self.w, self.h)
 
     def Render(self, camera_pos = (0,0), alpha = 255):
-        self.rect.x = self.x + camera_pos[0]
-        self.rect.y = self.y + camera_pos[1]
+        self.rect.x = (self.x - (self.w//2)) + camera_pos[0]
+        self.rect.y = (self.y - (self.h//2)) + camera_pos[1]
         self.rect.w = self.w
         self.rect.h = self.h
         SDL_SetTextureAlphaMod(self.texture, alpha)
@@ -797,7 +797,8 @@ def main():
                                        location = (40, 560, 10, 15))
                 if (show_size):
                     text_renderer.RenderText (text = '(' + str(tile_size[0]) + ',' + str(tile_size[1])+ ')',
-                                          location = (mouse.x - 20, mouse.y - 20, 7, 10))
+                                          location = ((mouse.x - (ghost_tile.w//2)) - 20,
+                                                      (mouse.y - (ghost_tile.h//2)) - 20, 7, 10))
 
             if (show_file_saving):
                 timer += clock.dt_s
